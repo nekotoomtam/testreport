@@ -265,6 +265,11 @@ button {
   border-color: #3c8f5d;
 }
 
+.roadmapLesson.isComplete {
+  background: #f1f8f4;
+  border-color: #3c8f5d;
+}
+
 .roadmapLesson.isCheckpoint {
   background: #fffaf0;
   border-color: #e6c36a;
@@ -313,6 +318,11 @@ button {
   background: #2f7d4f;
 }
 
+.roadmapLesson.isComplete .lessonNumber {
+  color: #ffffff;
+  background: #2f7d4f;
+}
+
 .roadmapLesson.isCheckpoint .lessonNumber {
   color: #7a4d00;
   background: #fff0c2;
@@ -337,6 +347,14 @@ button {
   color: #111827;
   font-weight: 800;
   line-height: 1.25;
+}
+
+.lessonProgressMeta {
+  color: #2f7d4f;
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .roadmapCompact .lessonTitle {
@@ -531,12 +549,176 @@ h2 {
   gap: 10px;
 }
 
+.lockedChallenge {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  overflow: hidden;
+  background: #f8fafc;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+}
+
+.lockedChallengePreview {
+  display: grid;
+  gap: 12px;
+  filter: blur(7px);
+  opacity: 0.7;
+  user-select: none;
+}
+
+.lockedBlueprintMock {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-height: 126px;
+}
+
+.lockedBlueprintMock span,
+.lockedTextLines span {
+  display: block;
+  background: linear-gradient(90deg, #dbe4ef, #eef3f8, #dbe4ef);
+  border-radius: 6px;
+}
+
+.lockedBlueprintMock span:first-child {
+  grid-column: 1 / -1;
+  height: 22px;
+}
+
+.lockedBlueprintMock span:nth-child(2) {
+  min-height: 58px;
+}
+
+.lockedBlueprintMock span:nth-child(3) {
+  min-height: 58px;
+}
+
+.lockedBlueprintMock span:nth-child(4) {
+  grid-column: 1 / -1;
+  height: 18px;
+}
+
+.lockedTextLines {
+  display: grid;
+  gap: 8px;
+}
+
+.lockedTextLines span {
+  height: 10px;
+}
+
+.lockedTextLines span:nth-child(2) {
+  width: 88%;
+}
+
+.lockedTextLines span:nth-child(3) {
+  width: 74%;
+}
+
+.lockedTextLines span:nth-child(4) {
+  width: 56%;
+}
+
+.lockedChallengeNotice {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 22px;
+  color: #263445;
+  background: rgba(248, 250, 252, 0.78);
+  text-align: center;
+}
+
+.lockedChallengeNotice p {
+  max-width: 44ch;
+}
+
+.lockedChallengeNotice p:last-child {
+  color: #2457d6;
+  font-weight: 800;
+}
+
+.blueprintPanel {
+  display: grid;
+  gap: 8px;
+}
+
+.layoutSketch {
+  max-width: 100%;
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  color: #172033;
+  background: #fbfdff;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  scrollbar-gutter: stable;
+  white-space: pre;
+}
+
+.blueprintRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.35fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 12px;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+}
+
+.blueprintRow span {
+  color: #172033;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.blueprintRow p {
+  min-width: 0;
+}
+
+.designContractPanel .blueprintRow {
+  border-left: 3px solid #2457d6;
+}
+
+.lockedCodeNotice {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+}
+
 .taskList {
   display: grid;
   gap: 6px;
   padding-left: 20px;
   color: #475569;
   line-height: 1.45;
+}
+
+.teachingPointList {
+  display: grid;
+  gap: 7px;
+  margin: 2px 0 0;
+  padding-left: 20px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.teachingPointList li::marker {
+  color: #2457d6;
 }
 
 .checklistTitle {
@@ -550,6 +732,164 @@ h2 {
   content: "[ ] ";
   color: #2457d6;
   font-weight: 800;
+}
+
+.checklistHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.checklistHeader span {
+  color: #2457d6;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.checklistStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.checklistHint {
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.autoChecklist {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.autoChecklist li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.autoChecklist li.hasHint {
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+}
+
+.autoChecklist li.isComplete {
+  color: #1f6b43;
+}
+
+.checkStatus {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  place-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.checkStatus::before {
+  display: block;
+  width: 7px;
+  height: 2px;
+  background: #94a3b8;
+  content: "";
+}
+
+.autoChecklist li.isComplete .checkStatus {
+  background: #2f7d4f;
+  border-color: #2f7d4f;
+}
+
+.autoChecklist li.isComplete .checkStatus::before {
+  width: 5px;
+  height: 9px;
+  margin-top: -2px;
+  background: transparent;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(45deg);
+}
+
+.checkpointHint {
+  position: relative;
+  align-self: start;
+  margin-top: -1px;
+}
+
+.checkpointHintButton {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  place-items: center;
+  color: #2457d6;
+  background: #eef4ff;
+  border: 1px solid #b8cbff;
+  border-radius: 999px;
+  cursor: help;
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.checkpointHintButton:hover,
+.checkpointHintButton:focus-visible {
+  color: #ffffff;
+  background: #2457d6;
+  border-color: #2457d6;
+  outline: none;
+}
+
+.checkpointHintBubble {
+  position: absolute;
+  z-index: 20;
+  top: 28px;
+  right: 0;
+  display: grid;
+  width: min(300px, calc(100vw - 72px));
+  gap: 5px;
+  padding: 12px;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  visibility: hidden;
+}
+
+.checkpointHint:hover .checkpointHintBubble,
+.checkpointHint:focus-within .checkpointHintBubble {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.checkpointHintBubble p {
+  margin: 0;
+}
+
+.checkpointHintLevel {
+  color: #2457d6;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .visualPlaceholder {
@@ -594,21 +934,55 @@ h2 {
 }
 
 .codeEditorShell {
+  position: relative;
   width: 100%;
   min-height: 260px;
   max-height: calc(100dvh - 176px);
   overflow: hidden;
   resize: vertical;
   background: #ffffff;
-  border: 1px solid #bfccda;
+  border: 2px solid #9fb0c3;
   border-radius: 8px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  padding: 4px;
+  cursor: text;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 1px 0 rgba(15, 23, 42, 0.04);
   scrollbar-gutter: stable both-edges;
+}
+
+.codeEditorShell::after {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  width: 18px;
+  height: 18px;
+  content: "";
+  pointer-events: none;
+  opacity: 0.72;
+  background:
+    linear-gradient(135deg, transparent 0 58%, #94a3b8 58% 64%, transparent 64%),
+    linear-gradient(135deg, transparent 0 72%, #94a3b8 72% 78%, transparent 78%),
+    linear-gradient(135deg, transparent 0 86%, #94a3b8 86% 92%, transparent 92%);
+}
+
+.codeEditorShell:hover {
+  border-color: #6f8fb8;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 0 0 3px rgba(36, 87, 214, 0.08);
+}
+
+.codeEditorShell:focus-within {
+  border-color: #2457d6;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 0 0 3px rgba(36, 87, 214, 0.18);
 }
 
 .lessonPane.isEditorExpanded .codeEditorShell {
   min-height: min(68vh, 760px);
-  border-color: #8fb0ff;
+  border-color: #2457d6;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.7),
     0 14px 36px rgba(31, 41, 55, 0.1);
@@ -618,12 +992,14 @@ h2 {
   height: 100%;
   max-height: 100%;
   overflow: hidden;
+  border-radius: 5px;
 }
 
 .codeEditorShell .cm-editor {
   height: 100%;
   max-height: 100%;
   overflow: hidden;
+  border-radius: 5px;
 }
 
 .codeEditorShell .cm-scroller {

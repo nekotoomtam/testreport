@@ -3,6 +3,8 @@ function LessonRoadmap({
   selectedLessonId,
   viewMode,
   railMode,
+  lessonCompletionById = {},
+  lessonRunCounts = {},
   onSelectLesson,
   onAdvanceRoadmap,
 }) {
@@ -49,6 +51,9 @@ function LessonRoadmap({
         {lessons.map((lesson, index) => {
           const isSelected = lesson.id === selectedLessonId;
           const isCheckpoint = lesson.type === 'checkpoint';
+          const isComplete = Boolean(lessonCompletionById[lesson.id]);
+          const runCount = lessonRunCounts[lesson.id] ?? 0;
+          const lessonNumber = String(index + 1).padStart(2, '0');
 
           return (
             <button
@@ -56,15 +61,26 @@ function LessonRoadmap({
               type="button"
               className={`roadmapLesson ${isSelected ? 'isSelected' : ''} ${
                 isCheckpoint ? 'isCheckpoint' : ''
-              }`}
+              } ${isComplete ? 'isComplete' : ''}`}
               onClick={() => onSelectLesson(lesson.id)}
               aria-current={isSelected && isLessonMode ? 'step' : undefined}
             >
-              <span className="lessonNumber">{String(index + 1).padStart(2, '0')}</span>
+              <span
+                className="lessonNumber"
+                aria-label={isComplete ? `Lesson ${lessonNumber} complete` : undefined}
+              >
+                {isComplete ? '✓' : lessonNumber}
+              </span>
               {shouldShowLessonCopy ? (
                 <span className="lessonCopy">
                   {isCheckpoint ? <span className="checkpointLabel">Checkpoint</span> : null}
                   <span className="lessonTitle">{isLessonMode ? lesson.shortTitle : lesson.title}</span>
+                  {isComplete || runCount > 0 ? (
+                    <span className="lessonProgressMeta">
+                      {isComplete ? 'Completed' : 'In progress'}
+                      {runCount > 0 ? ` / Runs ${runCount}` : ''}
+                    </span>
+                  ) : null}
                   {!isLessonMode ? <span className="lessonSummary">{lesson.goal}</span> : null}
                 </span>
               ) : null}

@@ -3,6 +3,7 @@ import { javascript } from '@codemirror/lang-javascript';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { EditorView } from '@codemirror/view';
+import { useRef } from 'react';
 
 const editorTheme = EditorView.theme(
   {
@@ -72,8 +73,24 @@ const editorExtensions = [
 ];
 
 function CodeEditor({ id, value, onChange, readOnly = false, height = '360px' }) {
+  const editorShellRef = useRef(null);
+
+  function handleShellMouseDown(event) {
+    if (event.target !== editorShellRef.current) {
+      return;
+    }
+
+    editorShellRef.current.querySelector('.cm-content')?.focus();
+  }
+
   return (
-    <div id={id} className="codeEditorShell" style={{ height }}>
+    <div
+      id={id}
+      ref={editorShellRef}
+      className="codeEditorShell"
+      style={{ height }}
+      onMouseDown={handleShellMouseDown}
+    >
       <CodeMirror
         value={value}
         height="100%"

@@ -9,18 +9,24 @@ function getErrorMessage(error) {
   return String(error);
 }
 
-export function runLessonCode(code) {
+function createUnavailableImageGetter() {
+  throw new Error('Image assets are not available for this lesson.');
+}
+
+export function runLessonCode(code, helpers = {}) {
   if (!code || !code.trim()) {
     throw new Error('Code is empty. Define function generate() and return a jsPDF document.');
   }
 
   let getGenerate;
+  const getLessonImage = helpers.getLessonImage ?? createUnavailableImageGetter;
 
   try {
     getGenerate = new Function(
       'jsPDF',
       'registerThaiFont',
       'PDF_FONTS',
+      'getLessonImage',
       `"use strict";
 ${code}
 
@@ -33,7 +39,7 @@ return typeof generate === "function" ? generate : undefined;`,
   let generate;
 
   try {
-    generate = getGenerate(jsPDF, registerThaiFont, PDF_FONTS);
+    generate = getGenerate(jsPDF, registerThaiFont, PDF_FONTS, getLessonImage);
   } catch (error) {
     throw new Error(`Could not prepare lesson code: ${getErrorMessage(error)}`);
   }
