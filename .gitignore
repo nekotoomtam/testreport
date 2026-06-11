@@ -1,0 +1,4 @@
+node_modules/
+dist/
+.codex-dev-server.*
+.DS_Store

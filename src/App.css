@@ -1,0 +1,856 @@
+:root {
+  color: #172033;
+  background: #f4f6f8;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+button {
+  font: inherit;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.appShell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  background: #f4f6f8;
+  transition: grid-template-columns 420ms ease;
+}
+
+.appShell.isLessonMode {
+  grid-template-columns: minmax(232px, 300px) minmax(0, 1fr);
+}
+
+.appShell.isLessonMode.isRoadmapCompact {
+  grid-template-columns: 76px minmax(0, 1fr);
+}
+
+.appShell.isLessonMode.isRoadmapRailOpen {
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.roadmapPane {
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #f8fafc;
+  scrollbar-gutter: stable;
+  transition:
+    padding 420ms ease,
+    background-color 420ms ease,
+    border-color 420ms ease;
+}
+
+.roadmapFull {
+  display: grid;
+  align-content: safe center;
+  gap: 36px;
+  padding: clamp(28px, 7vw, 72px);
+}
+
+.roadmapRail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 20px;
+  padding: 28px 16px;
+  border-right: 1px solid #dde3ea;
+}
+
+.roadmapCompact {
+  gap: 12px;
+  padding: 16px 10px;
+}
+
+.roadmapIntro {
+  display: grid;
+  max-width: 760px;
+  gap: 12px;
+  transition: max-width 420ms ease;
+}
+
+.roadmapRail .roadmapIntro {
+  max-width: 220px;
+}
+
+.roadmapCompact .roadmapIntro {
+  justify-items: center;
+  max-width: 56px;
+  gap: 8px;
+}
+
+.roadmapCompact .roadmapIntro .eyebrow {
+  display: none;
+}
+
+.roadmapIntro h1 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  line-height: 0.95;
+  transition: font-size 420ms ease;
+}
+
+.roadmapRail .roadmapIntro h1 {
+  font-size: 1.7rem;
+  line-height: 1.05;
+}
+
+.roadmapCompact .roadmapIntro h1 {
+  max-height: 0;
+  overflow: hidden;
+  font-size: 0;
+  opacity: 0;
+}
+
+.roadmapIntro p:last-child {
+  max-width: 62ch;
+  margin: 0;
+  color: #475569;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  opacity: 1;
+  transition:
+    opacity 220ms ease,
+    max-height 420ms ease;
+}
+
+.roadmapRail .roadmapIntro p:last-child {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.expandMapButton {
+  position: relative;
+  display: grid;
+  width: 38px;
+  min-height: 36px;
+  place-items: center;
+  padding: 0;
+  color: #2457d6;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.expandMapButton::before,
+.expandMapButton::after {
+  display: block;
+  content: "";
+}
+
+.expandMapButton.isOpenRailAction::before {
+  width: 9px;
+  height: 9px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: translateX(-2px) rotate(45deg);
+}
+
+.expandMapButton.isFullMapAction::before {
+  width: 15px;
+  height: 15px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+}
+
+.expandMapButton.isFullMapAction::after {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-top: 2px solid currentColor;
+  border-left: 2px solid currentColor;
+  transform: translate(-4px, -4px);
+}
+
+.expandMapButton:hover {
+  background: #edf3ff;
+  border-color: #8fb0ff;
+}
+
+.roadmapRail .expandMapButton {
+  justify-self: start;
+}
+
+.roadmapCompact .expandMapButton {
+  width: 38px;
+  min-height: 38px;
+}
+
+.lessonRoadmap {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 1120px;
+  gap: 16px;
+  padding-bottom: 4px;
+  transition:
+    grid-template-columns 420ms ease,
+    gap 420ms ease;
+}
+
+.roadmapRail .lessonRoadmap {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.roadmapCompact .lessonRoadmap {
+  gap: 8px;
+}
+
+.roadmapLesson {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 144px;
+  gap: 16px;
+  padding: 18px;
+  color: #172033;
+  background: #ffffff;
+  border: 1px solid #d6dee8;
+  border-radius: 8px;
+  box-shadow: 0 16px 48px rgba(31, 41, 55, 0.08);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    min-height 420ms ease,
+    padding 420ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease;
+}
+
+.roadmapLesson:hover {
+  border-color: #2457d6;
+  box-shadow: 0 18px 54px rgba(31, 41, 55, 0.12);
+}
+
+.roadmapLesson.isSelected {
+  background: #f1f8f4;
+  border-color: #3c8f5d;
+}
+
+.roadmapLesson.isCheckpoint {
+  background: #fffaf0;
+  border-color: #e6c36a;
+}
+
+.roadmapLesson.isCheckpoint.isSelected {
+  background: #f8f0d8;
+  border-color: #b98500;
+}
+
+.roadmapRail .roadmapLesson {
+  min-height: 76px;
+  gap: 10px;
+  padding: 12px;
+  box-shadow: none;
+}
+
+.roadmapCompact .roadmapLesson {
+  grid-template-columns: 1fr;
+  min-height: 44px;
+  gap: 0;
+  place-items: center;
+  padding: 6px;
+}
+
+.lessonNumber {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: #2457d6;
+  background: #e8eefc;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.roadmapCompact .lessonNumber {
+  width: 32px;
+  height: 32px;
+  font-size: 0.72rem;
+}
+
+.roadmapLesson.isSelected .lessonNumber {
+  color: #ffffff;
+  background: #2f7d4f;
+}
+
+.roadmapLesson.isCheckpoint .lessonNumber {
+  color: #7a4d00;
+  background: #fff0c2;
+}
+
+.roadmapLesson.isCheckpoint.isSelected .lessonNumber {
+  color: #ffffff;
+  background: #a66a00;
+}
+
+.lessonCopy {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.roadmapCompact .lessonCopy {
+  display: none;
+}
+
+.lessonTitle {
+  color: #111827;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.roadmapCompact .lessonTitle {
+  font-size: 0.78rem;
+  line-height: 1.15;
+}
+
+.checkpointLabel {
+  justify-self: start;
+  padding: 3px 7px;
+  color: #7a4d00;
+  background: #fff0c2;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.roadmapCompact .checkpointLabel {
+  display: none;
+}
+
+.lessonSummary {
+  color: #5f6f82;
+  line-height: 1.45;
+  opacity: 1;
+  transition:
+    opacity 220ms ease,
+    max-height 420ms ease;
+}
+
+.roadmapRail .lessonSummary {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.workspaceShell {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.9fr) minmax(420px, 1.1fr);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateX(24px);
+  transition:
+    opacity 260ms ease 120ms,
+    transform 260ms ease 120ms,
+    visibility 0s linear 420ms;
+}
+
+.appShell.isLessonMode .workspaceShell {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    opacity 300ms ease 130ms,
+    transform 300ms ease 130ms,
+    visibility 0s linear 0s;
+}
+
+.lessonPane,
+.previewPane {
+  min-width: 0;
+  min-height: 0;
+  padding: 32px;
+}
+
+.lessonPane {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow: auto;
+  background: #ffffff;
+  border-right: 1px solid #dde3ea;
+}
+
+.previewPane {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow: hidden;
+  background: #eef3f7;
+}
+
+.roadmapPane,
+.lessonPane,
+.codeEditorShell .cm-scroller {
+  scrollbar-color: #9aa9ba transparent;
+  scrollbar-width: thin;
+}
+
+.roadmapPane::-webkit-scrollbar,
+.lessonPane::-webkit-scrollbar,
+.codeEditorShell .cm-scroller::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.roadmapPane::-webkit-scrollbar-thumb,
+.lessonPane::-webkit-scrollbar-thumb,
+.codeEditorShell .cm-scroller::-webkit-scrollbar-thumb {
+  background: #9aa9ba;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+.lessonHeader,
+.previewHeader {
+  display: grid;
+  gap: 8px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #617084;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h2 {
+  color: #111827;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1;
+}
+
+.lessonHeader p:last-child {
+  max-width: 66ch;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.lessonDetails {
+  display: grid;
+  gap: 12px;
+}
+
+.lessonInfoBlock {
+  display: grid;
+  gap: 6px;
+}
+
+.lessonInfoBlock h3 {
+  margin: 0;
+  color: #334155;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.lessonInfoBlock p,
+.taskList,
+.conceptList {
+  margin: 0;
+}
+
+.lessonInfoBlock p {
+  color: #475569;
+  line-height: 1.55;
+}
+
+.conceptList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.conceptList li {
+  padding: 5px 9px;
+  color: #2457d6;
+  background: #edf3ff;
+  border: 1px solid #c9d8ff;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.challengeBlock {
+  display: grid;
+  gap: 10px;
+}
+
+.taskList {
+  display: grid;
+  gap: 6px;
+  padding-left: 20px;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.checklistTitle {
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.taskList.checklist li::marker {
+  content: "[ ] ";
+  color: #2457d6;
+  font-weight: 800;
+}
+
+.visualPlaceholder {
+  justify-self: start;
+  padding: 6px 9px;
+  color: #5f6f82;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.editorLabel {
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.editorHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.editorToggleButton {
+  min-height: 34px;
+  padding: 0 12px;
+  color: #2457d6;
+  background: #ffffff;
+  border: 1px solid #c9d8ff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.editorToggleButton:hover {
+  background: #edf3ff;
+  border-color: #8fb0ff;
+}
+
+.codeEditorShell {
+  width: 100%;
+  min-height: 260px;
+  max-height: calc(100dvh - 176px);
+  overflow: hidden;
+  resize: vertical;
+  background: #ffffff;
+  border: 1px solid #bfccda;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  scrollbar-gutter: stable both-edges;
+}
+
+.lessonPane.isEditorExpanded .codeEditorShell {
+  min-height: min(68vh, 760px);
+  border-color: #8fb0ff;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 14px 36px rgba(31, 41, 55, 0.1);
+}
+
+.codeEditorShell .cm-theme-light {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.codeEditorShell .cm-editor {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.codeEditorShell .cm-scroller {
+  height: 100%;
+  max-height: 100%;
+  overflow: auto !important;
+  scrollbar-gutter: stable;
+}
+
+.codeEditorShell .cm-tooltip {
+  border-radius: 6px;
+}
+
+.actionBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.actionBar button {
+  min-height: 40px;
+  padding: 0 16px;
+  color: #ffffff;
+  background: #2457d6;
+  border: 1px solid #2457d6;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.actionBar button:hover {
+  background: #1d46ad;
+}
+
+.actionBar button:disabled {
+  color: #8794a6;
+  background: #edf1f5;
+  border-color: #d4dde8;
+  cursor: not-allowed;
+}
+
+.actionBar .secondaryButton {
+  color: #263445;
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.actionBar .secondaryButton:hover {
+  background: #f8fafc;
+}
+
+.actionBar .secondaryButton:disabled:hover {
+  background: #edf1f5;
+}
+
+.consolePanel {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  line-height: 1.45;
+}
+
+.consolePanel.success {
+  color: #1d5f3b;
+  background: #f0f8f3;
+  border-color: #a8d4b8;
+}
+
+.consolePanel.error {
+  color: #8f1d1d;
+  background: #fff2f2;
+  border-color: #f1b5b5;
+}
+
+.consoleLabel {
+  color: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.previewPlaceholder {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  place-items: center;
+  padding: 28px;
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0.22) 1px, transparent 1px),
+    linear-gradient(rgba(148, 163, 184, 0.22) 1px, transparent 1px);
+  background-size: 24px 24px;
+  border: 1px solid #d1dbe6;
+  border-radius: 8px;
+}
+
+.paperMock {
+  display: grid;
+  width: min(100%, 520px);
+  aspect-ratio: 1 / 1.414;
+  place-items: center;
+  padding: 32px;
+  color: #738093;
+  background: #ffffff;
+  border: 1px solid #dce3eb;
+  border-radius: 4px;
+  box-shadow: 0 24px 70px rgba(31, 41, 55, 0.16);
+  text-align: center;
+}
+
+.pdfPreviewSurface {
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #d1dbe6;
+  border-radius: 8px;
+}
+
+.pdfFrame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  background: #ffffff;
+}
+
+@media (max-width: 860px) {
+  .appShell {
+    overflow: visible;
+  }
+
+  .appShell.isLessonMode {
+    grid-template-columns: minmax(176px, 210px) minmax(0, 1fr);
+  }
+
+  .appShell.isLessonMode.isRoadmapCompact {
+    grid-template-columns: 68px minmax(0, 1fr);
+  }
+
+  .appShell.isLessonMode.isRoadmapRailOpen {
+    grid-template-columns: 210px minmax(0, 1fr);
+  }
+
+  .roadmapFull {
+    padding: 24px;
+  }
+
+  .roadmapRail {
+    padding: 20px 12px;
+  }
+
+  .roadmapCompact {
+    padding: 14px 8px;
+  }
+
+  .roadmapIntro h1 {
+    font-size: clamp(2rem, 12vw, 3.4rem);
+  }
+
+  .roadmapRail .roadmapIntro h1 {
+    font-size: 1.35rem;
+  }
+
+  .lessonRoadmap {
+    grid-template-columns: 1fr;
+  }
+
+  .workspaceShell {
+    grid-template-columns: 1fr;
+  }
+
+  .lessonPane {
+    border-right: 0;
+    border-bottom: 1px solid #dde3ea;
+  }
+
+  .lessonPane,
+  .previewPane {
+    padding: 24px;
+  }
+
+  .previewPlaceholder {
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 520px) {
+  .appShell,
+  .appShell.isLessonMode {
+    grid-template-columns: 1fr;
+  }
+
+  .roadmapRail {
+    padding: 24px;
+    border-right: 0;
+    border-bottom: 1px solid #dde3ea;
+  }
+
+  .roadmapRail .roadmapIntro h1 {
+    font-size: clamp(2rem, 12vw, 3.4rem);
+  }
+
+  .roadmapRail .roadmapIntro p:last-child,
+  .roadmapRail .lessonSummary {
+    max-height: 120px;
+    opacity: 1;
+  }
+
+  .workspaceShell {
+    visibility: visible;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      max-height 420ms ease,
+      opacity 260ms ease 120ms,
+      transform 260ms ease 120ms;
+  }
+
+  .appShell.isLessonMode .workspaceShell {
+    max-height: none;
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
