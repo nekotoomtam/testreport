@@ -36,10 +36,224 @@ function hasLandscapePage(doc) {
   return width > height;
 }
 
+function parseArithmeticExpression(source) {
+  let index = 0;
+
+  function skipWhitespace() {
+    while (/\s/.test(source[index])) {
+      index += 1;
+    }
+  }
+
+  function parseNumber() {
+    skipWhitespace();
+
+    const match = source.slice(index).match(/^(?:\d+(?:\.\d*)?|\.\d+)/);
+
+    if (!match) {
+      return null;
+    }
+
+    index += match[0].length;
+
+    return Number(match[0]);
+  }
+
+  function parseFactor() {
+    skipWhitespace();
+
+    if (source[index] === '+') {
+      index += 1;
+      return parseFactor();
+    }
+
+    if (source[index] === '-') {
+      index += 1;
+      const value = parseFactor();
+
+      return value === null ? null : -value;
+    }
+
+    if (source[index] === '(') {
+      index += 1;
+      const value = parseExpression();
+
+      skipWhitespace();
+
+      if (source[index] !== ')') {
+        return null;
+      }
+
+      index += 1;
+
+      return value;
+    }
+
+    return parseNumber();
+  }
+
+  function parseTerm() {
+    let value = parseFactor();
+
+    if (value === null) {
+      return null;
+    }
+
+    while (true) {
+      skipWhitespace();
+
+      const operator = source[index];
+
+      if (operator !== '*' && operator !== '/') {
+        break;
+      }
+
+      index += 1;
+
+      const nextValue = parseFactor();
+
+      if (nextValue === null) {
+        return null;
+      }
+
+      value = operator === '*' ? value * nextValue : value / nextValue;
+    }
+
+    return value;
+  }
+
+  function parseExpression() {
+    let value = parseTerm();
+
+    if (value === null) {
+      return null;
+    }
+
+    while (true) {
+      skipWhitespace();
+
+      const operator = source[index];
+
+      if (operator !== '+' && operator !== '-') {
+        break;
+      }
+
+      index += 1;
+
+      const nextValue = parseTerm();
+
+      if (nextValue === null) {
+        return null;
+      }
+
+      value = operator === '+' ? value + nextValue : value - nextValue;
+    }
+
+    return value;
+  }
+
+  const value = parseExpression();
+
+  skipWhitespace();
+
+  return index === source.length && Number.isFinite(value) ? value : null;
+}
+
+function stripWrappingParentheses(source) {
+  let trimmedSource = source.trim();
+
+  while (trimmedSource.startsWith('(') && trimmedSource.endsWith(')')) {
+    let depth = 0;
+    let wrapsWholeExpression = true;
+
+    for (let index = 0; index < trimmedSource.length; index += 1) {
+      const character = trimmedSource[index];
+
+      if (character === '(') {
+        depth += 1;
+      } else if (character === ')') {
+        depth -= 1;
+      }
+
+      if (depth === 0 && index < trimmedSource.length - 1) {
+        wrapsWholeExpression = false;
+        break;
+      }
+    }
+
+    if (!wrapsWholeExpression || depth !== 0) {
+      break;
+    }
+
+    trimmedSource = trimmedSource.slice(1, -1).trim();
+  }
+
+  return trimmedSource;
+}
+
+function getNumericDeclarationSource(code, variableName) {
+  const pattern = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;\n]+)/gi;
+  let match = pattern.exec(code);
+
+  while (match) {
+    if (match[1] === variableName) {
+      return match[2];
+    }
+
+    match = pattern.exec(code);
+  }
+
+  return null;
+}
+
+function resolveNumericArg(code, source, seenVariables = new Set()) {
+  const trimmedSource = stripWrappingParentheses(source);
+
+  if (/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(trimmedSource)) {
+    return Number(trimmedSource);
+  }
+
+  if (/^[A-Za-z_$][\w$]*$/.test(trimmedSource)) {
+    if (seenVariables.has(trimmedSource)) {
+      return null;
+    }
+
+    const declarationSource = getNumericDeclarationSource(code, trimmedSource);
+
+    if (!declarationSource) {
+      return null;
+    }
+
+    return resolveNumericArg(code, declarationSource, new Set([...seenVariables, trimmedSource]));
+  }
+
+  if (!/^[\w$.\s+\-*/()]+$/.test(trimmedSource)) {
+    return null;
+  }
+
+  let hasUnresolvedVariable = false;
+  const expressionWithNumbers = trimmedSource.replace(/\b[A-Za-z_$][\w$]*\b/g, (variableName) => {
+    const value = resolveNumericArg(code, variableName, seenVariables);
+
+    if (!Number.isFinite(value)) {
+      hasUnresolvedVariable = true;
+      return 'NaN';
+    }
+
+    return String(value);
+  });
+
+  if (hasUnresolvedVariable || !/^[\d\s+\-*/().]+$/.test(expressionWithNumbers)) {
+    return null;
+  }
+
+  return parseArithmeticExpression(expressionWithNumbers);
+}
+
 function findTextCall(code, text) {
   const escapedText = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = new RegExp(
-    `doc\\.text\\(\\s*(['"\`])${escapedText}\\1\\s*,\\s*(\\d+(?:\\.\\d+)?)\\s*,\\s*(\\d+(?:\\.\\d+)?)([^)]*)\\)`,
+    `doc\\.text\\(\\s*(['"\`])${escapedText}\\1\\s*,\\s*([^,\n)]+)\\s*,\\s*([^,\n)]+)([^)]*)\\)`,
     'i',
   );
   const match = code.match(pattern);
@@ -48,36 +262,22 @@ function findTextCall(code, text) {
     return null;
   }
 
+  const x = resolveNumericArg(code, match[2]);
+  const y = resolveNumericArg(code, match[3]);
+
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    return null;
+  }
+
   return {
-    x: Number(match[2]),
-    y: Number(match[3]),
+    x,
+    y,
     optionsSource: match[4] ?? '',
   };
 }
 
 function findRectCall(code) {
   return findRectCalls(code)[0] ?? null;
-}
-
-function findNumericConst(code, variableName) {
-  const pattern = new RegExp(`const\\s+${variableName}\\s*=\\s*(\\d+(?:\\.\\d+)?)`, 'i');
-  const match = code.match(pattern);
-
-  return match ? Number(match[1]) : null;
-}
-
-function resolveNumericArg(code, source) {
-  const trimmedSource = source.trim();
-
-  if (/^\d+(?:\.\d+)?$/.test(trimmedSource)) {
-    return Number(trimmedSource);
-  }
-
-  if (/^[A-Za-z_$][\w$]*$/.test(trimmedSource)) {
-    return findNumericConst(code, trimmedSource);
-  }
-
-  return null;
 }
 
 function findRectCalls(code) {
@@ -94,7 +294,7 @@ function findRectCalls(code) {
       height: resolveNumericArg(code, match[4]),
     };
 
-    if (Object.values(rectCall).every((value) => typeof value === 'number')) {
+    if (Object.values(rectCall).every((value) => Number.isFinite(value))) {
       rectCalls.push(rectCall);
     }
 
@@ -106,17 +306,22 @@ function findRectCalls(code) {
 
 function findLineCalls(code) {
   const pattern =
-    /doc\.line\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)/gi;
+    /doc\.line\(\s*([^,\n)]+)\s*,\s*([^,\n)]+)\s*,\s*([^,\n)]+)\s*,\s*([^,\n)]+)/gi;
   const lineCalls = [];
   let match = pattern.exec(code);
 
   while (match) {
-    lineCalls.push({
-      x1: Number(match[1]),
-      y1: Number(match[2]),
-      x2: Number(match[3]),
-      y2: Number(match[4]),
-    });
+    const lineCall = {
+      x1: resolveNumericArg(code, match[1]),
+      y1: resolveNumericArg(code, match[2]),
+      x2: resolveNumericArg(code, match[3]),
+      y2: resolveNumericArg(code, match[4]),
+    };
+
+    if (Object.values(lineCall).every((value) => Number.isFinite(value))) {
+      lineCalls.push(lineCall);
+    }
+
     match = pattern.exec(code);
   }
 
@@ -136,7 +341,7 @@ function countDocCalls(code, methodName) {
 }
 
 function hasNamedConst(code, variableName) {
-  const pattern = new RegExp(`const\\s+${variableName}\\s*=`);
+  const pattern = new RegExp(`\\b(?:const|let|var)\\s+${variableName}\\s*=`);
 
   return pattern.test(code);
 }
@@ -149,7 +354,7 @@ function hasFilledDrawnRect(code) {
 }
 
 function hasImagePathVariable(code) {
-  return /const\s+imagePath\s*=\s*['"]\/images\/[^'"]+['"]/i.test(code);
+  return /\b(?:const|let|var)\s+imagePath\s*=\s*['"]\/images\/[^'"]+['"]/i.test(code);
 }
 
 function hasGetLessonImageCall(code) {
@@ -201,7 +406,7 @@ function countProjectPropertyUses(code) {
 }
 
 function hasProjectObject(code) {
-  return /const\s+project\s*=\s*{/i.test(code);
+  return /\b(?:const|let|var)\s+project\s*=\s*{/i.test(code);
 }
 
 function usesRequiredProjectFields(code) {
@@ -211,7 +416,7 @@ function usesRequiredProjectFields(code) {
 }
 
 function hasMilestonesArray(code) {
-  return /const\s+milestones\s*=\s*\[/i.test(code);
+  return /\b(?:const|let|var)\s+milestones\s*=\s*\[/i.test(code);
 }
 
 function hasMilestonesIteration(code) {
@@ -219,7 +424,10 @@ function hasMilestonesIteration(code) {
 }
 
 function hasRowYFromIndex(code) {
-  return /const\s+y\s*=.[^;]*index\s*\*/i.test(code) || /index\s*\*\s*\d+/i.test(code);
+  return (
+    /\b(?:const|let|var)\s+y\s*=.[^;]*index\s*[*+-]/i.test(code) ||
+    /index\s*\*\s*\d+/i.test(code)
+  );
 }
 
 function hasLongProjectSummary(code) {
@@ -243,17 +451,46 @@ function hasStyleEvidence(code) {
 }
 
 function hasSetFontSize(code, size) {
-  const pattern = new RegExp(`doc\\.setFontSize\\(\\s*${size}\\s*\\)`);
+  const pattern = /doc\.setFontSize\(\s*([^,\n)]+)/gi;
+  let match = pattern.exec(code);
 
-  return pattern.test(code);
+  while (match) {
+    if (isNear(resolveNumericArg(code, match[1]), size, 0.25)) {
+      return true;
+    }
+
+    match = pattern.exec(code);
+  }
+
+  return false;
 }
 
 function hasRgbColorCall(code, methodName, red, green, blue) {
   const pattern = new RegExp(
-    `doc\\.${methodName}\\(\\s*${red}\\s*,\\s*${green}\\s*,\\s*${blue}\\s*\\)`,
+    `doc\\.${methodName}\\(\\s*([^,\n)]+)\\s*,\\s*([^,\n)]+)\\s*,\\s*([^,\n)]+)`,
+    'gi',
   );
+  let match = pattern.exec(code);
 
-  return pattern.test(code);
+  while (match) {
+    const colorValues = [
+      resolveNumericArg(code, match[1]),
+      resolveNumericArg(code, match[2]),
+      resolveNumericArg(code, match[3]),
+    ];
+
+    if (
+      isNear(colorValues[0], red, 0.25) &&
+      isNear(colorValues[1], green, 0.25) &&
+      isNear(colorValues[2], blue, 0.25)
+    ) {
+      return true;
+    }
+
+    match = pattern.exec(code);
+  }
+
+  return false;
 }
 
 function hasCheckpointContractColors(code) {
@@ -268,18 +505,19 @@ function hasCheckpointContractColors(code) {
 }
 
 function hasFooterNearPageBottom(code) {
-  const footerYMatch = code.match(/const\s+footerY\s*=\s*(\d+(?:\.\d+)?)/i);
-  const footerY = footerYMatch ? Number(footerYMatch[1]) : null;
+  const footerY = resolveNumericArg(code, 'footerY');
 
   if (footerY && footerY >= 260 && /doc\.text\([^;]*footerY/i.test(code)) {
     return true;
   }
 
-  const textPattern = /doc\.text\([^;]*,\s*[^,]+,\s*(\d+(?:\.\d+)?)/gi;
+  const textPattern = /doc\.text\(\s*(?:['"`][^'"`]*['"`]|[A-Za-z_$][\w$]*)\s*,\s*([^,\n)]+)\s*,\s*([^,\n)]+)/gi;
   let match = textPattern.exec(code);
 
   while (match) {
-    if (Number(match[1]) >= 260) {
+    const y = resolveNumericArg(code, match[2]);
+
+    if (Number.isFinite(y) && y >= 260) {
       return true;
     }
 
@@ -491,16 +729,16 @@ const lessonCheckers = {
   },
   'text-wrap': {
     'long-summary': ({ code }) => hasProjectObject(code) && hasLongProjectSummary(code),
-    'max-width': ({ code }) => /const\s+maxWidth\s*=/i.test(code),
+    'max-width': ({ code }) => /\b(?:const|let|var)\s+maxWidth\s*=/i.test(code),
     'split-text': ({ code }) => hasSplitTextToSizeCall(code),
     'wrapped-variable': ({ code }) =>
-      /const\s+wrappedSummary\s*=\s*doc\.splitTextToSize\(/i.test(code),
+      /\b(?:const|let|var)\s+wrappedSummary\s*=\s*doc\.splitTextToSize\(/i.test(code),
     'text-wrapped-lines': ({ code }) => /doc\.text\(\s*wrappedSummary\s*,/i.test(code),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
   'one-page-layout': {
-    'page-margin': ({ code }) => /const\s+pageMargin\s*=/i.test(code),
-    'content-width': ({ code }) => /const\s+contentWidth\s*=/i.test(code),
+    'page-margin': ({ code }) => /\b(?:const|let|var)\s+pageMargin\s*=/i.test(code),
+    'content-width': ({ code }) => /\b(?:const|let|var)\s+contentWidth\s*=/i.test(code),
     'section-boxes': ({ code }) => countDocCalls(code, 'rect') >= 2,
     'divider-line': ({ code }) => hasDocCall(code, 'line'),
     'wrapped-summary': ({ code }) => hasProjectSummaryWrap(code),

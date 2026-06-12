@@ -51,15 +51,15 @@ button {
 }
 
 .appShell.isLessonMode {
-  grid-template-columns: minmax(232px, 300px) minmax(0, 1fr);
+  grid-template-columns: minmax(232px, 300px) minmax(0, 1fr) !important;
 }
 
 .appShell.isLessonMode.isRoadmapCompact {
-  grid-template-columns: 76px minmax(0, 1fr);
+  grid-template-columns: 76px minmax(0, 1fr) !important;
 }
 
 .appShell.isLessonMode.isRoadmapRailOpen {
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1fr) !important;
 }
 
 .roadmapPane {
@@ -137,7 +137,7 @@ button {
   opacity: 0;
 }
 
-.roadmapIntro p:last-child {
+.roadmapIntroCopy {
   max-width: 62ch;
   margin: 0;
   color: #475569;
@@ -149,7 +149,7 @@ button {
     max-height 420ms ease;
 }
 
-.roadmapRail .roadmapIntro p:last-child {
+.roadmapRail .roadmapIntroCopy {
   max-height: 0;
   overflow: hidden;
   opacity: 0;
@@ -296,6 +296,7 @@ button {
 }
 
 .lessonNumber {
+  position: relative;
   display: grid;
   width: 36px;
   height: 36px;
@@ -321,6 +322,22 @@ button {
 .roadmapLesson.isComplete .lessonNumber {
   color: #ffffff;
   background: #2f7d4f;
+}
+
+.lessonCompleteBadge {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  display: grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  color: #ffffff;
+  background: #1f6b43;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  line-height: 1;
 }
 
 .roadmapLesson.isCheckpoint .lessonNumber {
@@ -392,6 +409,1041 @@ button {
   opacity: 0;
 }
 
+.catalogRoadmapLesson {
+  background: #fbfdff;
+}
+
+.catalogRoadmapLesson.isSelected {
+  background: #edf3ff;
+  border-color: #2457d6;
+}
+
+.catalogRoadmapLesson .checkpointLabel {
+  color: #2457d6;
+  background: #edf3ff;
+}
+
+.catalogRoadmapLesson.isSelected .checkpointLabel {
+  color: #ffffff;
+  background: #2457d6;
+}
+
+.catalogRoadmapLesson .lessonProgressMeta {
+  color: #2457d6;
+}
+
+.catalogRoadmapNumber {
+  font-size: 0.7rem;
+  letter-spacing: 0;
+}
+
+.referencePane {
+  gap: 20px;
+}
+
+.referenceTopicGroups {
+  display: grid;
+  gap: 16px;
+}
+
+.referenceTopicGroup {
+  display: grid;
+  gap: 10px;
+}
+
+.referenceTopicGroupHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.referenceTopicGroupHeader h3 {
+  margin: 0;
+  color: #334155;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.referenceTopicGroupHeader p {
+  color: #5f6f82;
+  line-height: 1.5;
+}
+
+.referenceTopicList {
+  display: grid;
+  gap: 8px;
+}
+
+.referenceTopicCard {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  color: #172033;
+  background: #ffffff;
+  border: 1px solid #d6dee8;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.referenceTopicCard:hover {
+  background: #f8fbff;
+  border-color: #8fb0ff;
+}
+
+.referenceTopicCard.isSelected {
+  background: #edf3ff;
+  border-color: #2457d6;
+}
+
+.referenceTopicCard span {
+  color: #111827;
+  font-weight: 800;
+}
+
+.referenceTopicCard code {
+  overflow: hidden;
+  color: #475569;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+}
+
+.referenceTopicCard small {
+  color: #2457d6;
+  font-weight: 800;
+}
+
+.conceptPane {
+  gap: 18px;
+  scrollbar-gutter: stable;
+}
+
+.conceptSurface {
+  display: grid;
+  min-height: 560px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 28px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0.22) 1px, transparent 1px),
+    linear-gradient(rgba(148, 163, 184, 0.22) 1px, transparent 1px);
+  background-size: 24px 24px;
+  border: 1px solid #d1dbe6;
+  border-radius: 8px;
+}
+
+.conceptPaperSet {
+  position: relative;
+  display: grid;
+  width: min(100%, 720px);
+  min-height: 420px;
+  place-items: center;
+}
+
+.conceptOverviewBoard {
+  position: relative;
+  display: grid;
+  width: min(100%, 420px);
+  gap: 16px;
+}
+
+.conceptOverviewFlow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.conceptOverviewStep {
+  display: grid;
+  min-height: 52px;
+  align-items: center;
+  padding: 10px;
+  color: #172033;
+  background: #ffffff;
+  border: 1px solid #d8e1ec;
+  border-left: 4px solid #2457d6;
+  border-radius: 8px;
+  box-shadow: 0 10px 26px rgba(31, 41, 55, 0.08);
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.conceptOverviewStep.isCreate {
+  border-left-color: #2457d6;
+}
+
+.conceptOverviewStep.isState {
+  border-left-color: #b45309;
+}
+
+.conceptOverviewStep.isPlace {
+  border-left-color: #2f7d4f;
+}
+
+.conceptOverviewStep.isExport {
+  border-left-color: #7c3aed;
+}
+
+.conceptOverviewArrow {
+  display: none;
+}
+
+.conceptOverviewPaper {
+  position: relative;
+  min-height: 350px;
+  padding: 26px 24px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(36, 87, 214, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(36, 87, 214, 0.08) 1px, transparent 1px),
+    #ffffff;
+  background-size: 24px 24px;
+  border: 1px solid #dce3eb;
+  border-radius: 4px;
+  box-shadow: 0 24px 70px rgba(31, 41, 55, 0.16);
+}
+
+.conceptOverviewTitle {
+  display: inline-block;
+  padding: 7px 10px;
+  color: #2457d6;
+  background: #edf3ff;
+  border: 1px solid #c9d8ff;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.conceptOverviewTextLine {
+  position: absolute;
+  left: 24px;
+  display: block;
+  width: 66%;
+  height: 12px;
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.conceptOverviewTextLine.isShort {
+  top: 98px;
+  width: 42%;
+  background: #2457d6;
+}
+
+.conceptOverviewTextLine:not(.isShort) {
+  top: 124px;
+}
+
+.conceptOverviewImage {
+  position: absolute;
+  top: 152px;
+  left: 24px;
+  width: 138px;
+  height: 88px;
+  background:
+    linear-gradient(135deg, rgba(47, 125, 79, 0.16), rgba(47, 125, 79, 0.34)),
+    #ecfdf3;
+  border: 2px solid #2f7d4f;
+  border-radius: 8px;
+}
+
+.conceptOverviewImage::before {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  left: 18px;
+  height: 32px;
+  background: #2f7d4f;
+  clip-path: polygon(0 100%, 32% 36%, 50% 72%, 68% 26%, 100% 100%);
+  content: "";
+}
+
+.conceptOverviewShape {
+  position: absolute;
+  right: 26px;
+  bottom: 92px;
+  width: 112px;
+  height: 76px;
+  background: #fff7ed;
+  border: 3px solid #b45309;
+  border-radius: 12px;
+}
+
+.conceptOverviewFooter {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  left: 24px;
+  padding-top: 12px;
+  color: #64748b;
+  border-top: 1px solid #d8e1ec;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-align: right;
+}
+
+.conceptPaper,
+.conceptPaperSet .conceptPaper {
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid #dce3eb;
+  border-radius: 4px;
+  box-shadow: 0 24px 70px rgba(31, 41, 55, 0.16);
+}
+
+.conceptPaperSet .isPortrait {
+  width: 240px;
+  height: 340px;
+  transform: translateX(-110px);
+}
+
+.conceptPaperSet .isLandscape {
+  position: absolute;
+  width: 340px;
+  height: 220px;
+  transform: translate(130px, 50px);
+}
+
+.conceptOptionStack {
+  position: absolute;
+  top: 28px;
+  right: 24px;
+  display: grid;
+  gap: 8px;
+}
+
+.conceptOptionStack span,
+.conceptDownloadButton,
+.conceptFontFile,
+.conceptMaxWidth {
+  padding: 6px 10px;
+  color: #2457d6;
+  background: #edf3ff;
+  border: 1px solid #c9d8ff;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.conceptPaperGrid {
+  width: min(100%, 380px);
+  aspect-ratio: 1 / 1.414;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(36, 87, 214, 0.1) 1px, transparent 1px),
+    linear-gradient(rgba(36, 87, 214, 0.1) 1px, transparent 1px),
+    #ffffff;
+  background-size: 28px 28px;
+}
+
+.conceptPageSizePaper {
+  width: min(100%, 440px);
+  aspect-ratio: 1.15 / 1;
+}
+
+.conceptPageSizeChip,
+.conceptAddPageChip {
+  position: absolute;
+  z-index: 2;
+  padding: 6px 10px;
+  color: #2457d6;
+  background: #edf3ff;
+  border: 1px solid #c9d8ff;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.conceptPageSizeChip {
+  top: 22px;
+  right: 22px;
+}
+
+.conceptPageSizeSheet {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 210px;
+  height: 300px;
+  background: #ffffff;
+  border: 2px solid #2457d6;
+  border-radius: 4px;
+  box-shadow: 0 14px 36px rgba(31, 41, 55, 0.14);
+  transform: translate(-50%, -50%);
+  animation: concept-page-resize 5s ease-in-out infinite;
+}
+
+.conceptPageWidth,
+.conceptPageHeight {
+  position: absolute;
+  color: #2f7d4f;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.conceptPageWidth {
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.conceptPageHeight {
+  top: 50%;
+  right: 28px;
+  writing-mode: vertical-rl;
+  transform: translateY(-50%);
+}
+
+.conceptAddPagePaper {
+  width: min(100%, 380px);
+  aspect-ratio: 1 / 1.414;
+}
+
+.conceptPageStack {
+  position: absolute;
+  display: grid;
+  width: 230px;
+  height: 320px;
+  place-items: center;
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid #d8e1ec;
+  border-radius: 4px;
+  box-shadow: 0 14px 34px rgba(31, 41, 55, 0.13);
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-weight: 800;
+}
+
+.conceptPageStack.isFirst {
+  transform: translate(-64px, -36px);
+}
+
+.conceptPageStack.isSecond {
+  border-color: #9bb4ff;
+  transform: translate(-20px, 4px);
+}
+
+.conceptPageStack.isThird {
+  color: #2457d6;
+  border-color: #2457d6;
+  transform: translate(28px, 46px);
+  animation: concept-new-page 4.8s ease-in-out infinite;
+}
+
+.conceptAddPageChip {
+  right: 24px;
+  bottom: 24px;
+}
+
+.conceptAxis {
+  position: absolute;
+  color: #2457d6;
+  font-weight: 900;
+}
+
+.conceptAxisX {
+  top: 24px;
+  right: 24px;
+}
+
+.conceptAxisY {
+  bottom: 24px;
+  left: 22px;
+}
+
+.conceptAxisX::before,
+.conceptAxisY::before {
+  position: absolute;
+  content: "";
+  background: #2457d6;
+}
+
+.conceptAxisX::before {
+  top: 10px;
+  right: 18px;
+  width: 310px;
+  height: 2px;
+}
+
+.conceptAxisY::before {
+  bottom: 20px;
+  left: 8px;
+  width: 2px;
+  height: 430px;
+}
+
+.conceptOrigin {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  color: #64748b;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.8rem;
+}
+
+.conceptMovingText {
+  position: absolute;
+  top: 122px;
+  left: 108px;
+  padding: 6px 9px;
+  color: #111827;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 6px;
+  font-weight: 800;
+  animation: concept-move-text 4.8s ease-in-out infinite;
+}
+
+.conceptTextX,
+.conceptTextY {
+  position: absolute;
+  padding: 5px 8px;
+  color: #2f7d4f;
+  background: #ecfdf3;
+  border: 1px solid #b9e6ca;
+  border-radius: 999px;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.conceptTextX {
+  top: 282px;
+  left: 130px;
+}
+
+.conceptTextY {
+  top: 330px;
+  right: 34px;
+}
+
+.conceptCoordinateLabel {
+  position: absolute;
+  top: 176px;
+  left: 178px;
+  color: #b45309;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-weight: 800;
+}
+
+.conceptRect {
+  position: absolute;
+  top: 130px;
+  left: 116px;
+  width: 220px;
+  height: 138px;
+  background: rgba(248, 250, 252, 0.92);
+  border: 3px solid #2457d6;
+  border-radius: 8px;
+}
+
+.conceptRect.isRounded {
+  border-radius: 28px;
+}
+
+.conceptRectStart {
+  position: absolute;
+  top: 124px;
+  left: 110px;
+  width: 14px;
+  height: 14px;
+  background: #b45309;
+  border: 3px solid #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(31, 41, 55, 0.22);
+}
+
+.conceptWidthLabel,
+.conceptHeightLabel {
+  position: absolute;
+  color: #2457d6;
+  font-weight: 900;
+}
+
+.conceptWidthLabel {
+  top: 280px;
+  left: 182px;
+}
+
+.conceptHeightLabel {
+  top: 184px;
+  left: 350px;
+  writing-mode: vertical-rl;
+}
+
+.conceptLine {
+  position: absolute;
+  top: 192px;
+  left: 104px;
+  width: 250px;
+  height: 3px;
+  background: #2f7d4f;
+  transform: rotate(28deg);
+  transform-origin: left center;
+  animation: concept-line-sweep 4.8s ease-in-out infinite;
+}
+
+.conceptLinePoint {
+  position: absolute;
+  z-index: 2;
+  padding: 5px 8px;
+  color: #2f7d4f;
+  background: #ecfdf3;
+  border: 1px solid #b9e6ca;
+  border-radius: 999px;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.conceptLinePoint.isStart {
+  top: 190px;
+  left: 76px;
+}
+
+.conceptLinePoint.isEnd {
+  top: 300px;
+  right: 84px;
+}
+
+.conceptRadiusLabel {
+  position: absolute;
+  top: 112px;
+  right: 130px;
+  color: #b45309;
+  font-weight: 900;
+}
+
+.conceptCircle {
+  position: absolute;
+  top: 156px;
+  left: 168px;
+  width: 170px;
+  height: 170px;
+  background: rgba(237, 243, 255, 0.72);
+  border: 3px solid #2457d6;
+  border-radius: 999px;
+}
+
+.conceptCircleCenter {
+  position: absolute;
+  top: 236px;
+  left: 236px;
+  color: #b45309;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.conceptCircleCenter::before {
+  position: absolute;
+  top: 7px;
+  left: -12px;
+  width: 9px;
+  height: 9px;
+  background: #b45309;
+  border-radius: 999px;
+  content: "";
+}
+
+.conceptRadiusLine {
+  position: absolute;
+  top: 244px;
+  left: 252px;
+  width: 84px;
+  height: 2px;
+  background: #2f7d4f;
+  transform: rotate(-18deg);
+  transform-origin: left center;
+}
+
+.conceptRadiusText {
+  position: absolute;
+  top: 210px;
+  left: 310px;
+  color: #2f7d4f;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-weight: 900;
+}
+
+.conceptStyledRect {
+  position: absolute;
+  top: 144px;
+  left: 134px;
+  width: 220px;
+  height: 150px;
+  background: #dbeafe;
+  border: 6px solid #2457d6;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.7);
+}
+
+.conceptStyleChip {
+  position: absolute;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.conceptStyleChip.isDraw {
+  top: 112px;
+  left: 124px;
+  color: #2457d6;
+  background: #edf3ff;
+  border: 1px solid #c9d8ff;
+}
+
+.conceptStyleChip.isFill {
+  top: 212px;
+  left: 206px;
+  color: #1f6b43;
+  background: #ecfdf3;
+  border: 1px solid #b9e6ca;
+}
+
+.conceptStyleChip.isLine {
+  right: 92px;
+  bottom: 188px;
+  color: #b45309;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+
+.conceptImageFrame {
+  position: absolute;
+  top: 122px;
+  left: 126px;
+  display: grid;
+  width: 230px;
+  height: 140px;
+  place-items: center;
+  overflow: hidden;
+  background: #f8fafc;
+  border: 3px solid #2457d6;
+  border-radius: 8px;
+}
+
+.conceptImageFrame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.conceptFontPaper,
+.conceptWrapPaper,
+.conceptDataPaper,
+.conceptSavePaper {
+  width: min(100%, 380px);
+  aspect-ratio: 1 / 1.414;
+  padding: 34px;
+  align-content: start;
+  justify-items: start;
+  gap: 18px;
+}
+
+.conceptFontFile {
+  justify-self: end;
+}
+
+.conceptFontArrow {
+  justify-self: center;
+  width: 72%;
+  height: 3px;
+  background: #2457d6;
+}
+
+.conceptFontLine {
+  margin: 0;
+  color: #111827;
+}
+
+.conceptFontLine.isSmall {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.conceptFontLine.isLatin {
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.conceptFontLine.isLarge {
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.conceptFontLine.isBlue {
+  color: #2457d6;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.conceptFontLine.isGreen {
+  color: #2f7d4f;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.conceptFontLine.isOrange {
+  color: #b45309;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.conceptFontLine.isThai {
+  color: #2457d6;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.conceptFontMeta {
+  margin: 0;
+  color: #64748b;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+}
+
+.conceptMeasuredText {
+  position: absolute;
+  top: 172px;
+  left: 112px;
+  color: #111827;
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.conceptMeasureBracket {
+  position: absolute;
+  top: 218px;
+  left: 110px;
+  width: 214px;
+  height: 20px;
+  border-right: 2px solid #2457d6;
+  border-bottom: 2px solid #2457d6;
+  border-left: 2px solid #2457d6;
+}
+
+.conceptWidthReadout {
+  position: absolute;
+  top: 250px;
+  left: 126px;
+  color: #2457d6;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.conceptWrapPaper span:not(.conceptMaxWidth) {
+  display: block;
+  height: 14px;
+  background: #dbe4ef;
+  border-radius: 999px;
+}
+
+.conceptWrapPaper span:nth-child(2) {
+  width: 78%;
+}
+
+.conceptWrapPaper span:nth-child(3) {
+  width: 68%;
+}
+
+.conceptWrapPaper span:nth-child(4) {
+  width: 74%;
+}
+
+.conceptWrapPaper span:nth-child(5) {
+  width: 42%;
+}
+
+.conceptDataObject,
+.conceptDataRows {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+}
+
+.conceptDataObject span,
+.conceptDataRows span {
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+}
+
+.conceptDataRows {
+  margin-top: 18px;
+  padding-left: 42px;
+  border-left: 3px solid #2f7d4f;
+}
+
+.conceptSavePaper {
+  place-items: center;
+}
+
+.conceptDownloadSheet {
+  width: 160px;
+  height: 220px;
+  background: #ffffff;
+  border: 1px solid #d8e1ec;
+  border-radius: 4px;
+  box-shadow: 0 12px 34px rgba(31, 41, 55, 0.14);
+  animation: concept-download-sheet 4.8s ease-in-out infinite;
+}
+
+.conceptDetailPanel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+}
+
+.conceptDetailPanel > code {
+  padding: 10px 12px;
+  overflow-x: auto;
+  color: #172033;
+  background: #f8fafc;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+}
+
+.conceptDetailPanel pre {
+  max-width: 100%;
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  color: #172033;
+  background: #0f172a;
+  border-radius: 8px;
+  scrollbar-gutter: stable;
+}
+
+.conceptDetailPanel pre code {
+  padding: 0;
+  color: #e5edf7;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.conceptDetailPanel p {
+  color: #475569;
+  line-height: 1.55;
+}
+
+.conceptDetailPanel dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.conceptDetailPanel dl div {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.32fr) minmax(0, 1fr);
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #e3e9f0;
+}
+
+.conceptDetailPanel dt {
+  color: #172033;
+  font-weight: 800;
+}
+
+.conceptDetailPanel dd {
+  margin: 0;
+  color: #475569;
+}
+
+.conceptDetailPanel button {
+  justify-self: start;
+  min-height: 38px;
+  padding: 0 14px;
+  color: #ffffff;
+  background: #2457d6;
+  border: 1px solid #2457d6;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.conceptDetailPanel button:hover {
+  background: #1d46ad;
+}
+
+@keyframes concept-move-text {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  45% {
+    transform: translate(118px, 76px);
+  }
+}
+
+@keyframes concept-page-resize {
+  0%,
+  100% {
+    width: 210px;
+    height: 300px;
+  }
+
+  48% {
+    width: 330px;
+    height: 215px;
+  }
+}
+
+@keyframes concept-new-page {
+  0%,
+  100% {
+    transform: translate(28px, 46px);
+  }
+
+  50% {
+    transform: translate(52px, 70px);
+  }
+}
+
+@keyframes concept-line-sweep {
+  0%,
+  100% {
+    transform: rotate(18deg);
+  }
+
+  50% {
+    transform: rotate(42deg);
+  }
+}
+
+@keyframes concept-download-sheet {
+  0%,
+  100% {
+    transform: translateY(-10px);
+  }
+
+  55% {
+    transform: translateY(34px);
+  }
+}
+
 .workspaceShell {
   display: grid;
   grid-template-columns: minmax(360px, 0.9fr) minmax(420px, 1.1fr);
@@ -440,6 +1492,10 @@ button {
   gap: 20px;
   overflow: hidden;
   background: #eef3f7;
+}
+
+.previewPane.conceptPane {
+  overflow: auto;
 }
 
 .roadmapPane,
@@ -500,7 +1556,37 @@ h2 {
 
 .lessonDetails {
   display: grid;
-  gap: 12px;
+  gap: 16px;
+}
+
+.lessonCard {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  background: #fbfdff;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+}
+
+.targetCard {
+  border-left: 3px solid #2457d6;
+}
+
+.workCard {
+  background: #ffffff;
+  border-left: 3px solid #2f7d4f;
+}
+
+.lessonCardHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.lessonCardHeader h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 1rem;
+  line-height: 1.25;
 }
 
 .lessonInfoBlock {
@@ -777,8 +1863,87 @@ h2 {
   line-height: 1.45;
 }
 
-.autoChecklist li.hasHint {
-  grid-template-columns: 18px minmax(0, 1fr) auto;
+.autoChecklist li.hasGuide {
+  align-items: start;
+}
+
+.checklistItemBody {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.checklistItemMain {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  align-items: start;
+}
+
+.checklistGuideActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-start;
+}
+
+.checklistGuideActions button {
+  min-height: 26px;
+  padding: 0 8px;
+  color: #2457d6;
+  background: #eef4ff;
+  border: 1px solid #b8cbff;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.checklistGuideActions button:hover,
+.checklistGuideActions button[aria-expanded="true"] {
+  color: #ffffff;
+  background: #2457d6;
+  border-color: #2457d6;
+}
+
+.hintLevelBadge {
+  display: grid;
+  min-height: 26px;
+  align-items: center;
+  padding: 0 8px;
+  color: #b45309;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.checklistGuidePanel {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+}
+
+.checklistGuidePanel p {
+  margin: 0;
+}
+
+.checklistGuidePanel pre {
+  margin: 0;
+  padding: 10px;
+  overflow-x: auto;
+  color: #e5edf7;
+  background: #0f172a;
+  border-radius: 8px;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre;
 }
 
 .autoChecklist li.isComplete {
@@ -819,88 +1984,11 @@ h2 {
   transform: rotate(45deg);
 }
 
-.checkpointHint {
-  position: relative;
-  align-self: start;
-  margin-top: -1px;
-}
-
-.checkpointHintButton {
-  display: grid;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  place-items: center;
-  color: #2457d6;
-  background: #eef4ff;
-  border: 1px solid #b8cbff;
-  border-radius: 999px;
-  cursor: help;
-  font-size: 0.78rem;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.checkpointHintButton:hover,
-.checkpointHintButton:focus-visible {
-  color: #ffffff;
-  background: #2457d6;
-  border-color: #2457d6;
-  outline: none;
-}
-
-.checkpointHintBubble {
-  position: absolute;
-  z-index: 20;
-  top: 28px;
-  right: 0;
-  display: grid;
-  width: min(300px, calc(100vw - 72px));
-  gap: 5px;
-  padding: 12px;
-  color: #334155;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
-  font-size: 0.82rem;
-  line-height: 1.45;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-4px);
-  transition:
-    opacity 160ms ease,
-    transform 160ms ease;
-  visibility: hidden;
-}
-
-.checkpointHint:hover .checkpointHintBubble,
-.checkpointHint:focus-within .checkpointHintBubble {
-  opacity: 1;
-  transform: translateY(0);
-  visibility: visible;
-}
-
-.checkpointHintBubble p {
-  margin: 0;
-}
-
 .checkpointHintLevel {
   color: #2457d6;
   font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
-}
-
-.visualPlaceholder {
-  justify-self: start;
-  padding: 6px 9px;
-  color: #5f6f82;
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 700;
 }
 
 .editorLabel {
@@ -1137,15 +2225,15 @@ h2 {
   }
 
   .appShell.isLessonMode {
-    grid-template-columns: minmax(176px, 210px) minmax(0, 1fr);
+    grid-template-columns: minmax(176px, 210px) minmax(0, 1fr) !important;
   }
 
   .appShell.isLessonMode.isRoadmapCompact {
-    grid-template-columns: 68px minmax(0, 1fr);
+    grid-template-columns: 68px minmax(0, 1fr) !important;
   }
 
   .appShell.isLessonMode.isRoadmapRailOpen {
-    grid-template-columns: 210px minmax(0, 1fr);
+    grid-template-columns: 210px minmax(0, 1fr) !important;
   }
 
   .roadmapFull {
@@ -1172,6 +2260,11 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .conceptDetailPanel dl div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
   .workspaceShell {
     grid-template-columns: 1fr;
   }
@@ -1194,7 +2287,7 @@ h2 {
 @media (max-width: 520px) {
   .appShell,
   .appShell.isLessonMode {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 
   .roadmapRail {
@@ -1207,10 +2300,42 @@ h2 {
     font-size: clamp(2rem, 12vw, 3.4rem);
   }
 
-  .roadmapRail .roadmapIntro p:last-child,
+  .roadmapRail .roadmapIntroCopy,
   .roadmapRail .lessonSummary {
     max-height: 120px;
     opacity: 1;
+  }
+
+  .referenceTopicCard {
+    padding: 11px;
+  }
+
+  .conceptSurface {
+    padding: 16px;
+  }
+
+  .conceptPaperSet {
+    min-height: 320px;
+  }
+
+  .conceptPaperSet .isPortrait {
+    width: 176px;
+    height: 248px;
+    transform: translateX(-56px);
+  }
+
+  .conceptPaperSet .isLandscape {
+    width: 230px;
+    height: 150px;
+    transform: translate(60px, 50px);
+  }
+
+  .conceptPaperGrid,
+  .conceptFontPaper,
+  .conceptWrapPaper,
+  .conceptDataPaper,
+  .conceptSavePaper {
+    width: min(100%, 360px);
   }
 
   .workspaceShell {
