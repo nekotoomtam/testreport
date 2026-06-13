@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import CopyableCodeBlock from './CopyableCodeBlock.jsx';
 import { jspdfCatalogSections } from '../reference/jspdfCatalog.js';
 
 export function getReferenceItems() {
@@ -6,8 +7,22 @@ export function getReferenceItems() {
     section.items.map((item) => ({
       ...item,
       sectionTitle: section.title,
+      sectionId: section.id,
     })),
   );
+}
+
+const referenceTopicIconBySectionId = {
+  overview: 'MAP',
+  document: 'DOC',
+  text: 'TXT',
+  shapes: 'BOX',
+  media: 'IMG',
+  output: 'OUT',
+};
+
+function getReferenceTopicIcon(sectionId) {
+  return referenceTopicIconBySectionId[sectionId] ?? 'API';
 }
 
 function OverviewVisual() {
@@ -275,9 +290,7 @@ export function ReferenceTeachingPanel({ item }) {
             </div>
           ))}
         </dl>
-        <pre>
-          <code>{item.example}</code>
-        </pre>
+        <CopyableCodeBlock code={item.example} />
       </div>
     </>
   );
@@ -318,9 +331,14 @@ function ReferenceWorkspace() {
                     }`}
                     onClick={() => setSelectedReferenceId(item.id)}
                   >
-                    <span>{item.name}</span>
-                    <code>{item.signature}</code>
-                    <small>{item.apiType}</small>
+                    <span className="referenceTopicIcon" aria-hidden="true">
+                      {getReferenceTopicIcon(section.id)}
+                    </span>
+                    <span className="referenceTopicBody">
+                      <span className="referenceTopicName">{item.name}</span>
+                      <code>{item.signature}</code>
+                      <small>{item.apiType}</small>
+                    </span>
                   </button>
                 ))}
               </div>

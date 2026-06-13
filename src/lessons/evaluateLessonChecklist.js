@@ -399,10 +399,6 @@ function hasProjectImagePath(code) {
   return /imagePath\s*:\s*['"]\/images\/[^'"]+['"]/i.test(code);
 }
 
-function hasGetProjectImageCall(code) {
-  return /getLessonImage\(\s*project\.imagePath\s*\)/i.test(code);
-}
-
 function findAddImageCall(code) {
   const pattern =
     /doc\.addImage\(\s*[^,]+,\s*['"][^'"]+['"]\s*,\s*([^,\n)]+)\s*,\s*([^,\n)]+)\s*,\s*([^,\n)]+)\s*,\s*([^,\n)]+)/i;
@@ -439,14 +435,83 @@ function countProjectPropertyUses(code) {
   return code.match(/project\.(name|date|owner|status|summary)/gi)?.length ?? 0;
 }
 
-function getProjectPropertyAliases(code) {
-  const aliases = new Set();
+const projectDataFields = ['name', 'date', 'owner', 'status', 'summary', 'imagePath'];
+const requiredProjectTextFields = ['name', 'date', 'owner', 'status'];
+
+function findMatchingParen(code, openParenIndex) {
+  let depth = 0;
+  let quote = '';
+  let isEscaped = false;
+
+  for (let index = openParenIndex; index < code.length; index += 1) {
+    const character = code[index];
+
+    if (quote) {
+      if (isEscaped) {
+        isEscaped = false;
+        continue;
+      }
+
+      if (character === '\\') {
+        isEscaped = true;
+        continue;
+      }
+
+      if (character === quote) {
+        quote = '';
+      }
+
+      continue;
+    }
+
+    if (character === '"' || character === "'" || character === '`') {
+      quote = character;
+      continue;
+    }
+
+    if (character === '(') {
+      depth += 1;
+      continue;
+    }
+
+    if (character === ')') {
+      depth -= 1;
+
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+
+  return -1;
+}
+
+function findCallArgumentSources(code, callPattern) {
+  const sources = [];
+  let match = callPattern.exec(code);
+
+  while (match) {
+    const openParenIndex = code.indexOf('(', match.index);
+    const closeParenIndex = findMatchingParen(code, openParenIndex);
+
+    if (openParenIndex >= 0 && closeParenIndex > openParenIndex) {
+      sources.push(code.slice(openParenIndex + 1, closeParenIndex));
+    }
+
+    match = callPattern.exec(code);
+  }
+
+  return sources;
+}
+
+function getProjectPropertyAliasMap(code) {
+  const aliasesByField = new Map(projectDataFields.map((field) => [field, new Set()]));
   const directAliasPattern =
-    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*project\.(name|date|owner|status|summary)\b/gi;
+    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*project\.(name|date|owner|status|summary|imagePath)\b/gi;
   let directAliasMatch = directAliasPattern.exec(code);
 
   while (directAliasMatch) {
-    aliases.add(directAliasMatch[1]);
+    aliasesByField.get(directAliasMatch[2])?.add(directAliasMatch[1]);
     directAliasMatch = directAliasPattern.exec(code);
   }
 
@@ -461,45 +526,55 @@ function getProjectPropertyAliases(code) {
       .forEach((part) => {
         const [fieldName, aliasName] = part.split(':').map((value) => value.trim());
 
-        if (!/^(name|date|owner|status|summary)$/.test(fieldName)) {
+        if (!projectDataFields.includes(fieldName)) {
           return;
         }
 
-        aliases.add(aliasName || fieldName);
+        aliasesByField.get(fieldName)?.add(aliasName || fieldName);
       });
 
     destructuringMatch = destructuringPattern.exec(code);
   }
 
-  return aliases;
+  return aliasesByField;
+}
+
+function sourceUsesProjectField(source, fieldName, aliasesByField) {
+  const escapedFieldName = fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const directFieldPattern = new RegExp(
+    `project\\s*(?:\\.\\s*${escapedFieldName}|\\[\\s*['"]${escapedFieldName}['"]\\s*\\])`,
+    'i',
+  );
+
+  if (directFieldPattern.test(source)) {
+    return true;
+  }
+
+  return [...(aliasesByField.get(fieldName) ?? [])].some((aliasName) =>
+    new RegExp(`\\b${aliasName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(source),
+  );
+}
+
+function hasProjectFieldInDocTextCall(code, fieldName) {
+  const aliasesByField = getProjectPropertyAliasMap(code);
+
+  return findCallArgumentSources(code, /doc\.text\s*\(/gi).some((textCallSource) =>
+    sourceUsesProjectField(textCallSource, fieldName, aliasesByField),
+  );
 }
 
 function hasProjectPropertyInTextCall(code) {
-  const aliases = getProjectPropertyAliases(code);
-  const textCallPattern = /doc\.text\s*\(([\s\S]*?)\)\s*;?/gi;
-  let textCallMatch = textCallPattern.exec(code);
+  return ['name', 'date', 'owner', 'status', 'summary'].some((fieldName) =>
+    hasProjectFieldInDocTextCall(code, fieldName),
+  );
+}
 
-  while (textCallMatch) {
-    const textCallSource = textCallMatch[1];
+function hasGetProjectImageCall(code) {
+  const aliasesByField = getProjectPropertyAliasMap(code);
 
-    if (/project\.(name|date|owner|status|summary)\b/i.test(textCallSource)) {
-      return true;
-    }
-
-    if (
-      [...aliases].some((aliasName) =>
-        new RegExp(`\\b${aliasName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(
-          textCallSource,
-        ),
-      )
-    ) {
-      return true;
-    }
-
-    textCallMatch = textCallPattern.exec(code);
-  }
-
-  return false;
+  return findCallArgumentSources(code, /getLessonImage\s*\(/gi).some((imageCallSource) =>
+    sourceUsesProjectField(imageCallSource, 'imagePath', aliasesByField),
+  );
 }
 
 function hasProjectObject(code) {
@@ -511,8 +586,10 @@ function hasProjectMilestonesArray(code) {
 }
 
 function usesRequiredProjectFields(code) {
-  return ['name', 'date', 'owner', 'status', 'summary', 'imagePath'].every((field) =>
-    new RegExp(`project\\.${field}\\b`, 'i').test(code),
+  return (
+    requiredProjectTextFields.every((fieldName) =>
+      hasProjectFieldInDocTextCall(code, fieldName),
+    ) && hasGetProjectImageCall(code)
   );
 }
 
@@ -691,12 +768,15 @@ function hasTextAt(code, text, expectedX, expectedY, tolerance = 1.5) {
 }
 
 function hasRightAlignedDateAtHeader(code) {
+  const aliasesByField = getProjectPropertyAliasMap(code);
+
   return findTextCalls(code).some(
     (textCall) =>
       isNear(textCall.x, 190, 1.5) &&
       isNear(textCall.y, 24, 1.5) &&
       /align\s*:\s*['"]right['"]/i.test(textCall.optionsSource) &&
-      (/2026-06-13/.test(textCall.textSource) || /project\.date\b/.test(textCall.textSource)),
+      (/2026-06-13/.test(textCall.textSource) ||
+        sourceUsesProjectField(textCall.textSource, 'date', aliasesByField)),
   );
 }
 
@@ -728,7 +808,7 @@ function hasProjectBriefCards(code) {
   return (
     hasRectAt(code, 20, 44, 170, 44) &&
     hasRectAt(code, 20, 106, 170, 56) &&
-    hasRectAt(code, 20, 178, 170, 48)
+    hasRectAt(code, 20, 178, 170, 64)
   );
 }
 
@@ -911,7 +991,7 @@ const lessonCheckers = {
     'header-divider': ({ code }) => hasLineSegment(code, 20, 32, 190),
     'info-card': ({ code }) => hasRectAt(code, 20, 44, 170, 44),
     'summary-card': ({ code }) => hasRectAt(code, 20, 106, 170, 56),
-    'milestone-card': ({ code }) => hasRectAt(code, 20, 178, 170, 48),
+    'milestone-card': ({ code }) => hasRectAt(code, 20, 178, 170, 64),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
   style: {

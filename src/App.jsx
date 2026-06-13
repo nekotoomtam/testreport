@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CodeEditor from './components/CodeEditor.jsx';
 import ConsolePanel from './components/ConsolePanel.jsx';
+import CopyableCodeBlock from './components/CopyableCodeBlock.jsx';
+import DataReferenceWorkspace from './components/DataReferenceWorkspace.jsx';
 import LessonRoadmap from './components/LessonRoadmap.jsx';
 import PdfPreview from './components/PdfPreview.jsx';
 import QuickReference from './components/QuickReference.jsx';
@@ -62,6 +64,67 @@ function getNextRunCount(progress, lesson, checklistResult) {
   const currentRunCount = progress.runCounts[lesson.id] ?? 0;
 
   return currentRunCount + (isLessonChecklistComplete(lesson, checklistResult) ? 0 : 1);
+}
+
+function getChecklistItemScope(item) {
+  if (item.scope) {
+    return item.scope;
+  }
+
+  if (item.id === 'previous-stage') {
+    return 'base';
+  }
+
+  if (item.id === 'run-preview') {
+    return 'run';
+  }
+
+  return 'task';
+}
+
+function getChecklistScopeTitle(scope, lesson) {
+  if (scope === 'base') {
+    return 'ฐานจากบทก่อน';
+  }
+
+  if (scope === 'run') {
+    return 'สถานะการรัน';
+  }
+
+  return lesson.type === 'checkpoint' ? 'รายการตรวจ checkpoint' : 'งานใหม่ของบทนี้';
+}
+
+function getChecklistScopeDescription(scope) {
+  if (scope === 'base') {
+    return 'ควรผ่านอยู่แล้วถ้า code จากบทก่อนยังไม่หาย';
+  }
+
+  if (scope === 'run') {
+    return 'ใช้ยืนยันว่า generate() ทำงานและ preview ถูกสร้างได้';
+  }
+
+  return 'ส่วนนี้คือสิ่งที่บทนี้อยากให้เพิ่มหรือปรับจริง ๆ';
+}
+
+function getChecklistGroups(checklistItems, lesson) {
+  const scopeOrder = ['task', 'base', 'run'];
+
+  return scopeOrder
+    .map((scope) => {
+      const items = checklistItems.filter((item) => getChecklistItemScope(item) === scope);
+
+      return {
+        scope,
+        title: getChecklistScopeTitle(scope, lesson),
+        description: getChecklistScopeDescription(scope),
+        items,
+      };
+    })
+    .filter((group) => group.items.length > 0);
+}
+
+function countCheckedItems(items, checklistResult) {
+  return items.filter((item) => checklistResult[item.id]).length;
 }
 
 function getCheckpointPrerequisites(checkpointLesson) {
@@ -297,6 +360,7 @@ function App() {
   const [isLessonWorkLoaded, setIsLessonWorkLoaded] = useState(false);
   const [activeHintItemIds, setActiveHintItemIds] = useState([]);
   const [openChecklistGuideById, setOpenChecklistGuideById] = useState({});
+  const [openCodeTargetById, setOpenCodeTargetById] = useState({});
   const [consoleEntry, setConsoleEntry] = useState({
     type: 'info',
     message: 'Choose a lesson, edit the code, then run it.',
@@ -388,7 +452,7 @@ function App() {
       return;
     }
 
-    if (!lessonUnlockById[nextLesson.id]) {
+    if (!lessonUnlockById[nextLesson.id] && !lessonCompletionById[nextLesson.id]) {
       const previousLesson = getPreviousLesson(nextLesson);
 
       setConsoleEntry({
@@ -422,6 +486,24 @@ function App() {
     setIsEditorExpanded(false);
     setRoadmapRailMode('compact');
     setViewMode('reference');
+  }
+
+  function handleSelectDataReference() {
+    if (!isDataReferenceUnlocked) {
+      setConsoleEntry({
+        type: 'info',
+        message: 'Complete Document 1 before opening the Data REF.',
+      });
+      return;
+    }
+
+    clearGeneratedPreview();
+    setSelectedLessonId(null);
+    setActiveHintItemIds([]);
+    setOpenChecklistGuideById({});
+    setIsEditorExpanded(false);
+    setRoadmapRailMode('compact');
+    setViewMode('data-reference');
   }
 
   function handleResetLesson() {
@@ -473,6 +555,13 @@ function App() {
     setOpenChecklistGuideById((current) => ({
       ...current,
       [guideKey]: current[guideKey] === guideType ? null : guideType,
+    }));
+  }
+
+  function handleToggleCodeTarget() {
+    setOpenCodeTargetById((current) => ({
+      ...current,
+      [selectedLesson.id]: !current[selectedLesson.id],
     }));
   }
 
@@ -657,6 +746,15 @@ function App() {
   const checklistItems = selectedLesson.completionChecklist ?? [];
   const checkedItems = getEffectiveChecklistResult(selectedLesson, lessonWorkById, code);
   const checkedItemCount = checklistItems.filter((item) => checkedItems[item.id]).length;
+  const checklistGroups = getChecklistGroups(checklistItems, selectedLesson);
+  const taskChecklistItems = checklistItems.filter(
+    (item) => getChecklistItemScope(item) === 'task',
+  );
+  const baseChecklistItems = checklistItems.filter(
+    (item) => getChecklistItemScope(item) === 'base',
+  );
+  const checkedTaskItemCount = countCheckedItems(taskChecklistItems, checkedItems);
+  const checkedBaseItemCount = countCheckedItems(baseChecklistItems, checkedItems);
   const selectedLessonRunCount = lessonRunCounts[selectedLesson.id] ?? 0;
   const selectedHintProgress = lessonProgress.hintProgress[selectedLesson.id] ?? {};
   const lessonCompletionById = useMemo(
@@ -694,6 +792,10 @@ function App() {
   const isCheckpointLocked =
     selectedLesson.type === 'checkpoint' &&
     checkpointPrerequisites.some((lesson) => !lessonCompletionById[lesson.id]);
+  const isDataReferenceUnlocked = Boolean(lessonCompletionById['checkpoint-project-summary']);
+  const isSelectedLessonComplete = Boolean(lessonCompletionById[selectedLesson.id]);
+  const isCodeTargetOpen = Boolean(openCodeTargetById[selectedLesson.id]);
+  const lessonTargetCode = selectedLesson.solutionCode ?? '';
   const completedPrerequisiteCount = checkpointPrerequisites.filter(
     (lesson) => lessonCompletionById[lesson.id],
   ).length;
@@ -708,16 +810,91 @@ function App() {
 
   const appShellClassName = [
     'appShell',
-    viewMode === 'lesson' || viewMode === 'reference' ? 'isLessonMode' : 'isCourseMapMode',
-    (viewMode === 'lesson' || viewMode === 'reference') && roadmapRailMode === 'compact'
+    viewMode === 'lesson' || viewMode === 'reference' || viewMode === 'data-reference'
+      ? 'isLessonMode'
+      : 'isCourseMapMode',
+    (viewMode === 'lesson' || viewMode === 'reference' || viewMode === 'data-reference') &&
+    roadmapRailMode === 'compact'
       ? 'isRoadmapCompact'
       : '',
-    (viewMode === 'lesson' || viewMode === 'reference') && roadmapRailMode === 'rail'
+    (viewMode === 'lesson' || viewMode === 'reference' || viewMode === 'data-reference') &&
+    roadmapRailMode === 'rail'
       ? 'isRoadmapRailOpen'
       : '',
   ]
     .filter(Boolean)
     .join(' ');
+
+  function renderChecklistItem(item) {
+    const isComplete = Boolean(checkedItems[item.id]);
+    const hintProgress = selectedHintProgress[item.id] ?? 0;
+    const hintText = getChecklistHint(item, hintProgress);
+    const hintLevel = getHintLevel(hintProgress);
+    const guide = getChecklistGuide(selectedLesson, item, hintText);
+    const guideKey = `${selectedLesson.id}:${item.id}`;
+    const openGuideType = openChecklistGuideById[guideKey];
+    const shouldShowAnswer = Boolean(guide.answerCode);
+    const shouldShowHintBadge =
+      !isComplete && activeHintItemIds.includes(item.id) && Boolean(hintText);
+
+    return (
+      <li
+        key={item.id}
+        className={`${isComplete ? 'isComplete' : ''} ${openGuideType ? 'hasGuide' : ''}`}
+      >
+        <span className="checkStatus" aria-label={isComplete ? 'Passed' : 'Pending'} />
+        <div className="checklistItemBody">
+          <div className="checklistItemMain">
+            <span>{item.label}</span>
+            {!isComplete ? (
+              <span className="checklistGuideActions">
+                <button
+                  type="button"
+                  onClick={() => handleToggleChecklistGuide(item.id, 'hint')}
+                  aria-expanded={openGuideType === 'hint'}
+                >
+                  Hint
+                </button>
+                {shouldShowAnswer ? (
+                  <button
+                    type="button"
+                    onClick={() => handleToggleChecklistGuide(item.id, 'answer')}
+                    aria-expanded={openGuideType === 'answer'}
+                  >
+                    ดูเฉลย
+                  </button>
+                ) : null}
+                {shouldShowHintBadge ? (
+                  <span className="hintLevelBadge">Lv {hintLevel}</span>
+                ) : null}
+              </span>
+            ) : null}
+          </div>
+          {openGuideType ? (
+            <div className="checklistGuidePanel">
+              {openGuideType === 'hint' ? (
+                <>
+                  <p className="checkpointHintLevel">
+                    {shouldShowHintBadge ? `คำใบ้ระดับ ${hintLevel}` : 'Hint'}
+                  </p>
+                  <p>{guide.hint}</p>
+                </>
+              ) : (
+                <>
+                  <p className="checkpointHintLevel">ตัวอย่าง code ที่ผ่านข้อนี้</p>
+                  <p className="checklistGuideCopyHint">
+                    นำ snippet นี้ไปเติมหรือเทียบใน function generate() เฉพาะส่วนของข้อนี้
+                    แล้วกด Run เพื่อตรวจอีกครั้ง
+                  </p>
+                  <CopyableCodeBlock code={guide.answerCode} />
+                </>
+              )}
+            </div>
+          ) : null}
+        </div>
+      </li>
+    );
+  }
 
   return (
     <main className={appShellClassName}>
@@ -729,8 +906,10 @@ function App() {
         lessonCompletionById={lessonCompletionById}
         lessonUnlockById={lessonUnlockById}
         lessonRunCounts={lessonRunCounts}
+        isDataReferenceUnlocked={isDataReferenceUnlocked}
         onSelectLesson={handleSelectLesson}
         onSelectReference={handleSelectReference}
+        onSelectDataReference={handleSelectDataReference}
         onAdvanceRoadmap={handleAdvanceRoadmap}
       />
 
@@ -738,11 +917,19 @@ function App() {
         className={`workspaceShell ${
           viewMode === 'lesson' ? 'isLessonWorkspace' : 'isReferenceWorkspace'
         }`}
-        aria-hidden={viewMode !== 'lesson' && viewMode !== 'reference'}
-        inert={viewMode !== 'lesson' && viewMode !== 'reference' ? true : undefined}
+        aria-hidden={
+          viewMode !== 'lesson' && viewMode !== 'reference' && viewMode !== 'data-reference'
+        }
+        inert={
+          viewMode !== 'lesson' && viewMode !== 'reference' && viewMode !== 'data-reference'
+            ? true
+            : undefined
+        }
       >
         {viewMode === 'reference' ? (
           <ReferenceWorkspace />
+        ) : viewMode === 'data-reference' ? (
+          <DataReferenceWorkspace />
         ) : (
           <>
             <section
@@ -941,91 +1128,38 @@ function App() {
                 <div className="checklistHeader">
                   <h3>Lesson Checklist</h3>
                   <div className="checklistStats">
-                    <span>
-                      {checkedItemCount}/{checklistItems.length}
-                    </span>
+                    {taskChecklistItems.length > 0 ? (
+                      <span>งานใหม่ {checkedTaskItemCount}/{taskChecklistItems.length}</span>
+                    ) : null}
+                    {baseChecklistItems.length > 0 ? (
+                      <span>ฐาน {checkedBaseItemCount}/{baseChecklistItems.length}</span>
+                    ) : null}
+                    <span>ทั้งหมด {checkedItemCount}/{checklistItems.length}</span>
                     <span>Runs {selectedLessonRunCount}</span>
                   </div>
                 </div>
-                <p className="checklistHint">ตรวจอัตโนมัติจาก code และ PDF หลังจากกด Run</p>
-                <ul className="autoChecklist">
-                  {checklistItems.map((item) => {
-                    const isComplete = Boolean(checkedItems[item.id]);
-                    const hintProgress = selectedHintProgress[item.id] ?? 0;
-                    const hintText = getChecklistHint(item, hintProgress);
-                    const hintLevel = getHintLevel(hintProgress);
-                    const guide = getChecklistGuide(selectedLesson, item, hintText);
-                    const guideKey = `${selectedLesson.id}:${item.id}`;
-                    const openGuideType = openChecklistGuideById[guideKey];
-                    const shouldShowAnswer = Boolean(guide.answerCode);
-                    const shouldShowHintBadge =
-                      !isComplete && activeHintItemIds.includes(item.id) && Boolean(hintText);
-
-                    return (
-                      <li
-                        key={item.id}
-                        className={`${isComplete ? 'isComplete' : ''} ${
-                          openGuideType ? 'hasGuide' : ''
-                        }`}
-                      >
-                        <span
-                          className="checkStatus"
-                          aria-label={isComplete ? 'Passed' : 'Pending'}
-                        />
-                        <div className="checklistItemBody">
-                          <div className="checklistItemMain">
-                            <span>{item.label}</span>
-                            {!isComplete ? (
-                              <span className="checklistGuideActions">
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleChecklistGuide(item.id, 'hint')}
-                                  aria-expanded={openGuideType === 'hint'}
-                                >
-                                  Hint
-                                </button>
-                                {shouldShowAnswer ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleChecklistGuide(item.id, 'answer')}
-                                    aria-expanded={openGuideType === 'answer'}
-                                  >
-                                    ดูเฉลย
-                                  </button>
-                                ) : null}
-                                {shouldShowHintBadge ? (
-                                  <span className="hintLevelBadge">Lv {hintLevel}</span>
-                                ) : null}
-                              </span>
-                            ) : null}
-                          </div>
-                          {openGuideType ? (
-                            <div className="checklistGuidePanel">
-                              {openGuideType === 'hint' ? (
-                                <>
-                                  <p className="checkpointHintLevel">
-                                    {shouldShowHintBadge ? `คำใบ้ระดับ ${hintLevel}` : 'Hint'}
-                                  </p>
-                                  <p>{guide.hint}</p>
-                                </>
-                              ) : (
-                                <>
-                                  <p className="checkpointHintLevel">ตัวอย่าง code ที่ผ่านข้อนี้</p>
-                                  <p className="checklistGuideCopyHint">
-                                    วางแทนเนื้อหาใน function generate() ได้เลย แล้วกด Run เพื่อตรวจข้อนี้
-                                  </p>
-                                  <pre>
-                                    <code>{guide.answerCode}</code>
-                                  </pre>
-                                </>
-                              )}
-                            </div>
-                          ) : null}
+                <p className="checklistHint">
+                  ตรวจอัตโนมัติจาก code และ PDF หลังจากกด Run โดยแยกงานใหม่ออกจากฐานที่แบกมาจากบทก่อน
+                </p>
+                <div className="checklistGroups">
+                  {checklistGroups.map((group) => (
+                    <section
+                      key={group.scope}
+                      className={`checklistGroup is${group.scope[0].toUpperCase()}${group.scope.slice(1)}`}
+                    >
+                      <div className="checklistGroupHeader">
+                        <div>
+                          <h4>{group.title}</h4>
+                          <p>{group.description}</p>
                         </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+                        <span>
+                          {countCheckedItems(group.items, checkedItems)}/{group.items.length}
+                        </span>
+                      </div>
+                      <ul className="autoChecklist">{group.items.map(renderChecklistItem)}</ul>
+                    </section>
+                  ))}
+                </div>
               </section>
             ) : (
               <p className="lessonMutedText">Checklist จะพร้อมใช้งานเมื่อบทนี้เปิดให้ทำ</p>
@@ -1092,6 +1226,35 @@ function App() {
               <p className="editorFootnote">
                 ใช้ปุ่ม Run ทางขวาเพื่อสร้าง preview และตรวจ checklist ของบทนี้
               </p>
+
+              <section
+                className={`codeTargetPanel ${isSelectedLessonComplete ? '' : 'isLocked'}`}
+                aria-label="Code target example"
+              >
+                <div className="codeTargetHeader">
+                  <div>
+                    <p className="eyebrow">Code Target</p>
+                    <h3>ตัวอย่างโค้ดหลังจบบทนี้</h3>
+                  </div>
+                  {isSelectedLessonComplete && lessonTargetCode ? (
+                    <button
+                      type="button"
+                      onClick={handleToggleCodeTarget}
+                      aria-expanded={isCodeTargetOpen}
+                    >
+                      {isCodeTargetOpen ? 'Hide' : 'View'}
+                    </button>
+                  ) : null}
+                </div>
+                <p>
+                  {isSelectedLessonComplete
+                    ? 'เป็นตัวอย่างหนึ่งที่ให้ผลลัพธ์ผ่านโจทย์ โค้ดของเราต่างได้ถ้า preview และ checklist ตรงกัน'
+                    : 'ผ่านบทนี้ก่อน แล้วค่อยเปิดดูตัวอย่างไว้ทาบกับ code ของเรา'}
+                </p>
+                {isSelectedLessonComplete && isCodeTargetOpen && lessonTargetCode ? (
+                  <CopyableCodeBlock code={lessonTargetCode} copyLabel="Copy target code" />
+                ) : null}
+              </section>
             </>
           )}
                 </div>

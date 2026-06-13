@@ -1,4 +1,4 @@
-const projectBriefStarterVersion = 7;
+const projectBriefStarterVersion = 8;
 
 const blankStarterCode = `function generate() {
 
@@ -45,7 +45,7 @@ const stage3 = `function generate() {
 
   doc.rect(pageMargin, infoY, contentWidth, 44);
   doc.rect(pageMargin, summaryY, contentWidth, 56);
-  doc.rect(pageMargin, milestoneY, contentWidth, 48);
+  doc.rect(pageMargin, milestoneY, contentWidth, 64);
 
   return doc;
 }
@@ -79,7 +79,7 @@ const stage4 = `function generate() {
   doc.setFillColor(248, 250, 252);
   doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
   doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
-  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 64, 'FD');
 
   doc.setTextColor(17, 24, 39);
   doc.setFontSize(18);
@@ -132,7 +132,7 @@ const stage5 = `function generate() {
   doc.setFillColor(248, 250, 252);
   doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
   doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
-  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 64, 'FD');
 
   doc.addImage(imageData, 'PNG', imageX, imageY, imageWidth, imageHeight);
 
@@ -190,7 +190,7 @@ const stage6 = `function generate() {
   doc.setFillColor(248, 250, 252);
   doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
   doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
-  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 64, 'FD');
 
   doc.addImage(imageData, 'PNG', imageX, imageY, imageWidth, imageHeight);
 
@@ -227,6 +227,7 @@ const stage7 = `function generate() {
     milestones: [
       { label: 'พื้นฐาน', value: 'หน้าเอกสาร ข้อความ กล่อง และ style' },
       { label: 'เนื้อหา', value: 'รูปภาพ ฟอนต์ไทย ข้อมูล และการ wrap' },
+      { label: 'ตรวจทาน', value: 'ทาบ preview กับ blueprint แล้วปรับตำแหน่ง' },
     ],
   };
 
@@ -260,7 +261,7 @@ const stage7 = `function generate() {
   doc.setFillColor(248, 250, 252);
   doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
   doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
-  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 64, 'FD');
 
   doc.addImage(imageData, 'PNG', imageX, imageY, imageWidth, imageHeight);
 
@@ -302,6 +303,7 @@ const stage8 = `function generate() {
     milestones: [
       { label: 'พื้นฐาน', value: 'หน้าเอกสาร ข้อความ กล่อง และ style' },
       { label: 'เนื้อหา', value: 'รูปภาพ ฟอนต์ไทย ข้อมูล และการ wrap' },
+      { label: 'ตรวจทาน', value: 'ทาบ preview กับ blueprint แล้วปรับตำแหน่ง' },
     ],
   };
 
@@ -337,7 +339,7 @@ const stage8 = `function generate() {
   doc.setFillColor(248, 250, 252);
   doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
   doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
-  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 64, 'FD');
 
   doc.addImage(imageData, 'PNG', imageX, imageY, imageWidth, imageHeight);
 
@@ -379,6 +381,7 @@ const stage9 = `function generate() {
     milestones: [
       { label: 'พื้นฐาน', value: 'หน้าเอกสาร ข้อความ กล่อง และ style' },
       { label: 'เนื้อหา', value: 'รูปภาพ ฟอนต์ไทย ข้อมูล และการ wrap' },
+      { label: 'ตรวจทาน', value: 'ทาบ preview กับ blueprint แล้วปรับตำแหน่ง' },
     ],
   };
 
@@ -415,7 +418,7 @@ const stage9 = `function generate() {
   doc.setFillColor(248, 250, 252);
   doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
   doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
-  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 64, 'FD');
 
   doc.addImage(imageData, 'PNG', imageX, imageY, imageWidth, imageHeight);
 
@@ -480,7 +483,7 @@ const blueprint = [
   },
   {
     label: 'Milestones card',
-    detail: 'กล่อง milestones x 20, y 178, width 170, height 48 และ render rows ด้วย project.milestones',
+    detail: 'กล่อง milestones x 20, y 178, width 170, height 64 และ render rows ด้วย project.milestones',
   },
   {
     label: 'Footer',
@@ -528,7 +531,7 @@ export const lessons = [
     completionChecklist: [
       { id: 'page-a4-mm', label: 'สร้างเอกสาร A4 ด้วยหน่วย mm' },
       { id: 'return-doc', label: 'return doc จาก function generate()' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ', scope: 'run' },
     ],
     starterCode: blankStarterCode,
     starterCodeVersion: projectBriefStarterVersion,
@@ -561,12 +564,12 @@ export const lessons = [
       ],
     },
     completionChecklist: [
-      { id: 'previous-stage', label: 'ฐานจากบท 1 ยังอยู่ครบ' },
+      { id: 'previous-stage', label: 'ฐานจากบท 1 ยังอยู่ครบ', scope: 'base' },
       { id: 'layout-vars', label: 'มี pageMargin และ contentWidth สำหรับ layout ของเอกสาร' },
       { id: 'header-title', label: "วาง 'Project Brief' ที่ตำแหน่ง header ฝั่งซ้าย" },
       { id: 'header-date', label: 'วางวันที่ที่ตำแหน่ง header ฝั่งขวา' },
       { id: 'date-align-right', label: "ใช้ { align: 'right' } กับวันที่" },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ', scope: 'run' },
     ],
     starterCode: stage1,
     starterCodeVersion: projectBriefStarterVersion,
@@ -596,16 +599,16 @@ export const lessons = [
         'วาด divider จาก x 20 ถึง x 190 ที่ y 32',
         'วาด Info card ที่ y 44',
         'วาด Summary card ที่ y 106',
-        'วาด Milestones card ที่ y 178',
+        'วาด Milestones card ที่ y 178 สูง 64 mm',
       ],
     },
     completionChecklist: [
-      { id: 'previous-stage', label: 'ฐานจากบท 2 ยังอยู่ครบ' },
+      { id: 'previous-stage', label: 'ฐานจากบท 2 ยังอยู่ครบ', scope: 'base' },
       { id: 'header-divider', label: 'วาด divider ใต้ header ที่ y 32' },
       { id: 'info-card', label: 'วาด Info card ตาม blueprint' },
       { id: 'summary-card', label: 'วาด Summary card ตาม blueprint' },
       { id: 'milestone-card', label: 'วาด Milestones card ตาม blueprint' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ', scope: 'run' },
     ],
     starterCode: stage2,
     starterCodeVersion: projectBriefStarterVersion,
@@ -641,12 +644,12 @@ export const lessons = [
       ],
     },
     completionChecklist: [
-      { id: 'previous-stage', label: 'ฐานจากบท 3 ยังอยู่ครบ' },
+      { id: 'previous-stage', label: 'ฐานจากบท 3 ยังอยู่ครบ', scope: 'base' },
       { id: 'title-style', label: 'ตั้ง title เป็น font size 22 และสีหลัก' },
       { id: 'heading-style', label: 'ตั้ง section heading เป็น font size 18' },
       { id: 'body-style', label: 'ตั้ง body text เป็น font size 16 และสีรอง' },
       { id: 'card-style', label: 'ใช้สีขอบและสีพื้นกับ card ทั้งสามใบ' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ', scope: 'run' },
     ],
     starterCode: stage3,
     starterCodeVersion: projectBriefStarterVersion,
@@ -681,12 +684,12 @@ export const lessons = [
       ],
     },
     completionChecklist: [
-      { id: 'previous-stage', label: 'ฐานจากบท 4 ยังอยู่ครบ' },
+      { id: 'previous-stage', label: 'ฐานจากบท 4 ยังอยู่ครบ', scope: 'base' },
       { id: 'image-path', label: 'มี imagePath สำหรับรูปตัวอย่าง' },
       { id: 'image-data', label: 'เตรียม imageData ด้วย getLessonImage(imagePath)' },
-      { id: 'image-placement', label: 'วางภาพใน Info card ตาม blueprint' },
       { id: 'image-size', label: 'กำหนดขนาดภาพ 36 x 24 mm' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+      { id: 'image-placement', label: 'วางภาพใน Info card ตาม blueprint' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ', scope: 'run' },
     ],
     starterCode: stage4,
     starterCodeVersion: projectBriefStarterVersion,
@@ -721,12 +724,12 @@ export const lessons = [
       ],
     },
     completionChecklist: [
-      { id: 'previous-stage', label: 'ฐานจากบท 5 ยังอยู่ครบ' },
+      { id: 'previous-stage', label: 'ฐานจากบท 5 ยังอยู่ครบ', scope: 'base' },
       { id: 'register-thai-font', label: 'เรียก registerThaiFont(doc)' },
       { id: 'set-thai-font', label: 'เลือกฟอนต์ไทยด้วย doc.setFont(...)' },
       { id: 'thai-heading', label: 'มีหัวข้อ section ภาษาไทยในเอกสาร' },
       { id: 'thai-body', label: 'มีข้อความรายละเอียดภาษาไทยในเอกสาร' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ', scope: 'run' },
     ],
     starterCode: stage5,
     starterCodeVersion: projectBriefStarterVersion,
@@ -762,13 +765,13 @@ export const lessons = [
       ],
     },
     completionChecklist: [
-      { id: 'previous-stage', label: 'ฐานจากบท 6 ยังอยู่ครบ' },
+      { id: 'previous-stage', label: 'ฐานจากบท 6 ยังอยู่ครบ', scope: 'base' },
       { id: 'project-object', label: 'สร้าง project object สำหรับข้อมูลเอกสาร' },
       { id: 'project-fields', label: 'ใช้ project fields ใน doc.text() และ image' },
       { id: 'milestones-array', label: 'มี project.milestones เป็น array' },
       { id: 'milestones-loop', label: 'วน project.milestones ด้วย forEach() หรือ map()' },
       { id: 'row-y-position', label: 'ใช้ index คำนวณตำแหน่ง y ของแต่ละ row' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ', scope: 'run' },
     ],
     starterCode: stage6,
     starterCodeVersion: projectBriefStarterVersion,
@@ -803,12 +806,16 @@ export const lessons = [
       ],
     },
     completionChecklist: [
-      { id: 'previous-stage', label: 'ฐานจากบท 7 ยังอยู่ครบ' },
-      { id: 'long-summary', label: 'project.summary เป็นข้อความยาวของเอกสาร' },
+      { id: 'previous-stage', label: 'ฐานจากบท 7 ยังอยู่ครบ', scope: 'base' },
+      {
+        id: 'long-summary',
+        label: 'project.summary จากบท 7 เป็นข้อความยาวพอให้ wrap',
+        scope: 'base',
+      },
       { id: 'summary-width', label: 'กำหนด summaryWidth สำหรับ Summary card' },
       { id: 'split-summary', label: 'ใช้ doc.splitTextToSize(project.summary, summaryWidth)' },
       { id: 'wrapped-summary-text', label: 'ส่ง wrappedSummary เข้า doc.text() ใน Summary card' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ', scope: 'run' },
     ],
     starterCode: stage7,
     starterCodeVersion: projectBriefStarterVersion,
@@ -844,13 +851,21 @@ export const lessons = [
       ],
     },
     completionChecklist: [
-      { id: 'previous-stage', label: 'ฐานจากบท 8 ยังอยู่ครบ' },
-      { id: 'section-stack', label: 'จัด Header / Info / Summary / Milestones ครบตาม blueprint' },
-      { id: 'image-in-info', label: 'ภาพยังอยู่ใน Info card ตามตำแหน่งเดิม' },
-      { id: 'wrapped-summary', label: 'Summary card ใช้ wrappedSummary' },
-      { id: 'milestone-rows', label: 'Milestones card แสดง rows จาก project.milestones' },
+      { id: 'previous-stage', label: 'ฐานจากบท 8 ยังอยู่ครบ', scope: 'base' },
+      {
+        id: 'section-stack',
+        label: 'Header / Info / Summary / Milestones จากบทก่อนยังครบ',
+        scope: 'base',
+      },
+      { id: 'image-in-info', label: 'ภาพยังอยู่ใน Info card ตามตำแหน่งเดิม', scope: 'base' },
+      { id: 'wrapped-summary', label: 'Summary card ยังใช้ wrappedSummary', scope: 'base' },
+      {
+        id: 'milestone-rows',
+        label: 'Milestones card ยังแสดง rows จาก project.milestones',
+        scope: 'base',
+      },
       { id: 'footer', label: 'มี footer line และ footer text ใกล้ท้ายหน้า' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ', scope: 'run' },
     ],
     starterCode: stage8,
     starterCodeVersion: projectBriefStarterVersion,
@@ -894,7 +909,7 @@ export const lessons = [
 │ └──────────────────────────────────────────┘ │
 │ ┌──────────────────────────────────────────┐ │
 │ │ หมุดหมายงาน                              │ │
-│ │ project.milestones rows                  │ │
+│ │ project.milestones rows x 3              │ │
 │ └──────────────────────────────────────────┘ │
 │ ──────────────────────────────────────────── │
 │ Generated by jsPDF Visual Lesson Playground  │
@@ -944,7 +959,7 @@ export const lessons = [
         label: 'Info / Summary / Milestones cards ตรง blueprint',
         hints: [
           'ใช้ pageMargin 20 และ contentWidth 170 กับทุก card',
-          'Info y 44, Summary y 106, Milestones y 178',
+          'Info y 44, Summary y 106, Milestones y 178 สูง 64 mm',
           "ใช้ doc.rect(..., 'FD') เพื่อให้ card มีพื้นและขอบ",
         ],
       },
@@ -996,6 +1011,7 @@ export const lessons = [
       {
         id: 'run-preview',
         label: 'กด Run แล้วสร้าง PDF preview สำเร็จ',
+        scope: 'run',
         hints: [
           'ข้อนี้ผ่านเมื่อ generate() return doc สำเร็จ',
           'ถ้า error ให้ดู console ก่อน',
