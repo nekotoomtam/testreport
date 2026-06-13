@@ -1,730 +1,905 @@
-const pdfOptions = "{ unit: 'mm', format: 'a4' }";
-const blankStarterCodeVersion = 4;
+const projectBriefStarterVersion = 7;
+
 const blankStarterCode = `function generate() {
 
 }
 `;
 
-export const lessons = [
-  {
-    id: 'hello-pdf',
-    order: 1,
-    phase: 'Phase 1: Basic API',
-    type: 'lesson',
-    title: 'Hello PDF',
-    shortTitle: 'Hello PDF',
-    goal: 'สร้างกระดาษ PDF แผ่นแรก และเลือกหน่วยวัด ขนาดกระดาษ กับแนวกระดาษ',
-    explanation:
-      "ใน jsPDF เราต้องสร้างเอกสารก่อนเสมอด้วย const doc = new jsPDF(...). ให้คิดว่า doc คือกระดาษ PDF ที่เราจะวาดทุกอย่างลงไป ส่วน unit คือหน่วยวัด, format คือขนาดกระดาษ และ orientation คือแนวกระดาษ",
-    teachingPoints: [
-      "new jsPDF(...) คือการหยิบกระดาษ PDF เปล่าขึ้นมาก่อนเริ่มวาดอะไรลงไป",
-      "unit: 'mm' ทำให้ตำแหน่ง x/y และขนาดต่าง ๆ ใช้หน่วยมิลลิเมตร",
-      "format: 'a4' หรือ 'a3' คือเลือกขนาดกระดาษสำเร็จรูป",
-      "orientation คือแนวกระดาษ: 'portrait' คือแนวตั้ง, 'landscape' คือแนวนอน",
-      "orientation: 'landscape' ทำให้กระดาษเป็นแนวนอน โดย A3 แนวนอนมีขนาดประมาณ 420 x 297 mm",
-    ],
-    concepts: ['new jsPDF() = สร้างเอกสาร', 'unit = หน่วยวัด', 'format = ขนาดกระดาษ', 'orientation = แนวกระดาษ'],
-    visualKind: 'none',
-    miniTask: 'เปลี่ยนเอกสารจาก A4 แนวตั้งให้เป็น A3 แนวนอน',
-    practice: {
-      prompt: 'ใน function generate() ให้สร้างเอกสาร PDF แบบ A3 แนวนอน แล้ว return doc เพื่อให้ preview แสดงผล',
-      requirements: [
-        "สร้าง doc ด้วย new jsPDF(...)",
-        "ใช้ unit: 'mm' เพื่อให้ตำแหน่งและขนาดเป็นมิลลิเมตร",
-        "ใช้ format: 'a3' เพื่อเลือกกระดาษ A3",
-        "ใช้ orientation: 'landscape' เพื่อให้กระดาษเป็นแนวนอน",
-        'ท้าย function ต้อง return doc',
-        'กด Run แล้วเห็นหน้ากระดาษกว้างขึ้นใน preview',
-      ],
-    },
-    completionChecklist: [
-      { id: 'unit-mm', label: "สร้าง doc ด้วย unit: 'mm'" },
-      { id: 'format-a3', label: "เลือกขนาดกระดาษเป็น format: 'a3'" },
-      { id: 'orientation-landscape', label: "เลือกแนวกระดาษเป็น orientation: 'landscape'" },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
-    ],
-    starterCode: `function generate() {
-  const doc = new jsPDF(${pdfOptions});
-
-  doc.text('Hello jsPDF', 20, 30);
-  doc.text('Change this document to A3 landscape.', 20, 44);
+const stage1 = `function generate() {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
   return doc;
 }
-`,
-  },
-  {
-    id: 'xy-position',
-    order: 2,
-    phase: 'Phase 1: Basic API',
-    type: 'lesson',
-    title: 'X/Y Position',
-    shortTitle: 'X/Y Position',
-    goal: 'วางข้อความบนกระดาษด้วยตำแหน่ง x/y และจัดซ้าย กลาง ขวาด้วย align',
-    explanation:
-      'doc.text(text, x, y, options) ใช้วางข้อความลงบนกระดาษ ค่า x คือระยะจากขอบซ้าย ค่า y คือระยะจากขอบบน ถ้า x มากขึ้นข้อความจะไปทางขวา ถ้า y มากขึ้นข้อความจะลงล่าง ส่วน options เช่น { align: \'center\' } ใส่เป็นตัวที่ 4 ของ doc.text(...)',
-    teachingPoints: [
-      'x คือแกนแนวนอน นับจากซ้ายไปขวา',
-      'y คือแกนแนวตั้ง นับจากบนลงล่าง',
-      'A4 แนวตั้งกว้างประมาณ 210 mm จึงมีจุดกึ่งกลางแนวนอนที่ x = 105',
-      "ข้อความชิดซ้ายใช้ x ใกล้ขอบซ้าย เช่น 20 และไม่ต้องใส่ align",
-      "ข้อความกลางหน้าใช้ x = 105 แล้วใส่ { align: 'center' } เป็น argument ตัวที่ 4",
-      "ข้อความชิดขวาใช้ x ใกล้ขอบขวา เช่น 190 แล้วใส่ { align: 'right' } เป็น argument ตัวที่ 4",
-    ],
-    concepts: ['doc.text(text, x, y, options)', 'x = ซ้าย/ขวา', 'y = บน/ล่าง', "align: 'center'", "align: 'right'"],
-    visualKind: 'xy-bars',
-    miniTask: 'วางข้อความ Left, Center, Right ด้วยพิกัดและ align ที่เหมาะสม',
-    practice: {
-      prompt: 'ใน function generate() ให้สร้าง doc แล้ววางข้อความ Left, Center และ Right ให้เห็นความต่างของตำแหน่งกับ align ชัดเจน',
-      requirements: [
-        "เริ่มด้วย const doc = new jsPDF({ unit: 'mm', format: 'a4' }) แล้วท้ายสุด return doc",
-        "วาง 'Left' ด้วย doc.text('Left', x, y) ใกล้ขอบซ้าย เช่น x = 20",
-        "วาง 'Center' ด้วย x ใกล้กลางหน้า เช่น 105 และใส่ { align: 'center' } เป็น argument ตัวที่ 4",
-        "วาง 'Right' ด้วย x ใกล้ขอบขวา เช่น 190 และใส่ { align: 'right' } เป็น argument ตัวที่ 4",
-        'ให้แต่ละข้อความอยู่คนละระดับ y เพื่อเห็นการเลื่อนลงของแกน y',
-        'กด Run แล้วเห็น PDF preview สำเร็จ',
-      ],
-    },
-    completionChecklist: [
-      { id: 'left-text', label: "วางข้อความ 'Left' ใกล้ขอบซ้าย" },
-      { id: 'center-text', label: "วางข้อความ 'Center' ใกล้กลางหน้า" },
-      { id: 'center-align', label: "ใส่ { align: 'center' } เป็นตัวเลือกของข้อความ Center" },
-      { id: 'right-text', label: "วางข้อความ 'Right' ใกล้ขอบขวา" },
-      { id: 'right-align', label: "ใส่ { align: 'right' } เป็นตัวเลือกของข้อความ Right" },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
-    ],
-    starterCode: `function generate() {
-  const doc = new jsPDF(${pdfOptions});
+`;
 
-  doc.text('Left', 20, 55);
-  doc.text('Move Center here', 20, 90);
-  doc.text('Move Right here', 20, 125);
-
-  return doc;
-}
-`,
-  },
-  {
-    id: 'line-rect',
-    order: 3,
-    phase: 'Phase 1: Basic API',
-    type: 'lesson',
-    title: 'Line / Rect',
-    shortTitle: 'Line / Rect',
-    goal: 'วาดกล่องสี่เหลี่ยมและเส้น โดยเข้าใจว่าค่า x/y/width/height หมายถึงอะไร',
-    explanation:
-      'doc.rect(...) คือการวาดกล่องสี่เหลี่ยมบน PDF คำว่า rect ย่อจาก rectangle ให้คิดง่าย ๆ ว่าเป็น box: x/y คือมุมซ้ายบนของกล่อง ส่วน width/height คือความกว้างและความสูงของกล่อง ส่วน doc.line(...) คือการลากเส้นจากจุดเริ่มไปจุดปลาย',
-    teachingPoints: [
-      'rect คือ rectangle หรือ box สี่เหลี่ยมบน PDF',
-      'rect ใช้ x/y เป็นตำแหน่งมุมซ้ายบนของกล่อง',
-      'rect ใช้ width/height เป็นขนาดของกล่อง ไม่ใช่พิกัดปลายทาง',
-      'ถ้าต้องการมุมขวาล่างของ rect ให้คิด x + width และ y + height',
-      'line ใช้ x1/y1 เป็นจุดเริ่ม และ x2/y2 เป็นจุดปลาย',
-      'เส้นกากบาทในกล่องเกิดจากการใช้มุมของ rect เป็น endpoint ของ line',
-    ],
-    concepts: ['doc.rect() = วาด box', 'x/y = มุมซ้ายบน', 'width/height = ขนาดกล่อง', 'doc.line() = ลากเส้น'],
-    visualKind: 'box-model',
-    miniTask: 'สร้างกล่องหนึ่งใบ แล้วลากเส้นทแยงสองเส้นให้เป็นกากบาทภายในกล่อง',
-    practice: {
-      prompt: 'ใน function generate() ให้สร้าง doc แล้ววาดกล่องหนึ่งใบ จากนั้นลากเส้นทแยง 2 เส้นให้เป็นกากบาทในกล่อง',
-      requirements: [
-        "เริ่มด้วย const doc = new jsPDF({ unit: 'mm', format: 'a4' }) แล้วท้ายสุด return doc",
-        'ใช้ doc.rect(60, 80, 90, 60) เป็นกล่องหลัก: x=60, y=80, width=90, height=60',
-        'ลากเส้นจากมุมซ้ายบนของกล่องไปมุมขวาล่าง',
-        'ลากเส้นจากมุมขวาบนของกล่องไปมุมซ้ายล่าง',
-        'มี doc.line() อย่างน้อย 2 เส้น',
-        'กด Run แล้วเห็น PDF preview สำเร็จ',
-      ],
-    },
-    completionChecklist: [
-      { id: 'rect-call', label: 'ใช้ doc.rect() เพื่อวาด box สี่เหลี่ยม' },
-      { id: 'center-rect', label: 'วาง box ใกล้กลางหน้าและกำหนด width/height ชัดเจน' },
-      { id: 'diagonal-down-line', label: 'ลาก doc.line() จากมุมซ้ายบนไปมุมขวาล่างของ box' },
-      { id: 'diagonal-up-line', label: 'ลาก doc.line() จากมุมขวาบนไปมุมซ้ายล่างของ box' },
-      { id: 'two-lines', label: 'มี doc.line() อย่างน้อย 2 เส้น' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
-    ],
-    starterCode: `function generate() {
-  const doc = new jsPDF(${pdfOptions});
-
-  doc.text('Rect and Line', 20, 25);
-
-  doc.rect(60, 80, 90, 60);
-
-  doc.line(60, 80, 150, 140);
-  // Add the second diagonal line here.
-
-  return doc;
-}
-`,
-  },
-  {
-    id: 'style',
-    order: 4,
-    phase: 'Phase 1: Basic API',
-    type: 'lesson',
-    title: 'Style',
-    shortTitle: 'Style',
-    goal: 'ตั้งค่าหน้าตาก่อนวาด เช่น ขนาดตัวอักษร สีข้อความ สีขอบ และสีพื้นกล่อง',
-    explanation:
-      "คำสั่ง set... ใน jsPDF เป็นการตั้งค่าให้สิ่งที่จะวาดถัดไป ไม่ได้วาดอะไรทันที และต้องเรียกผ่าน doc เช่น doc.setFontSize(...). ให้คิดเหมือนเลือกปากกาก่อนเขียน: ถ้าตั้ง font size หรือสีไว้ด้านบน ข้อความ/เส้น/กล่องที่อยู่ด้านล่างจะติดค่านั้นไปจนกว่าจะเปลี่ยนใหม่",
-    teachingPoints: [
-      'ทุกคำสั่ง style ในบทนี้เป็น method ของ doc เช่น doc.setFontSize(...) ไม่ใช่ setFontSize(...) ลอย ๆ',
-      'doc.setFontSize() ตั้งขนาดให้ doc.text() ที่อยู่หลังจากนั้น',
-      'doc.setTextColor(r, g, b) ตั้งสีข้อความถัดไป',
-      'doc.setDrawColor(r, g, b) ตั้งสีเส้นหรือสีขอบของ shape ถัดไป',
-      'doc.setFillColor(r, g, b) ตั้งสีพื้นของ shape ถัดไป',
-      "doc.rect(x, y, width, height, 'FD') คือวาดกล่องที่มีทั้งสีพื้นและขอบ",
-      "เก็บค่า x/y/width/height เป็นตัวแปร เช่น cardX, cardY, cardWidth, cardHeight เพื่อให้ rect, line และ text อ่านง่ายและลด bug",
-    ],
-    concepts: ['doc.set... = ตั้งค่า state', 'setFontSize = ขนาดข้อความ', 'setTextColor = สีข้อความ', 'setDrawColor = สีขอบ/เส้น', 'setFillColor = สีพื้น'],
-    visualKind: 'text-style',
-    miniTask: 'สร้าง status card ที่มีสีพื้น สีขอบ เส้นคั่น สีข้อความ และขนาดฟอนต์ที่ต่างกัน',
-    practice: {
-      prompt: 'ใน function generate() ให้สร้าง status card ที่มีสีพื้น สีขอบ เส้นคั่น สีข้อความ และขนาดตัวอักษรต่างกัน',
-      requirements: [
-        "เริ่มด้วย const doc = new jsPDF({ unit: 'mm', format: 'a4' }) แล้วท้ายสุด return doc",
-        'ใช้ตัวแปร cardX, cardY, cardWidth, cardHeight เพื่อคุมตำแหน่งและขนาดของกล่อง',
-        'ใช้ doc.setFillColor() เพื่อกำหนดสีพื้นกล่อง',
-        'ใช้ doc.setDrawColor() เพื่อกำหนดสีขอบหรือสีเส้น',
-        "ใช้ doc.rect(cardX, cardY, cardWidth, cardHeight, 'FD')",
-        'ใช้ doc.line() เป็นเส้นคั่นในกล่อง',
-        'ใช้ doc.setTextColor() เพื่อกำหนดสีข้อความ',
-        'ใช้ doc.setFontSize() อย่างน้อย 2 ขนาด',
-        'กด Run แล้วเห็น PDF preview สำเร็จ',
-      ],
-    },
-    completionChecklist: [
-      { id: 'card-variables', label: 'ใช้ตัวแปร cardX, cardY, cardWidth, cardHeight คุมกล่อง' },
-      { id: 'font-size', label: 'ใช้ doc.setFontSize() อย่างน้อย 2 ขนาด' },
-      { id: 'text-color', label: 'ใช้ doc.setTextColor() เพื่อกำหนดสีข้อความ' },
-      { id: 'fill-color', label: 'ใช้ doc.setFillColor() เพื่อกำหนดสีพื้นกล่อง' },
-      { id: 'draw-color', label: 'ใช้ doc.setDrawColor() เพื่อกำหนดสีขอบหรือเส้น' },
-      { id: 'rect-fd', label: "ใช้ doc.rect(..., 'FD') เพื่อให้กล่องมีทั้งพื้นและขอบ" },
-      { id: 'divider-line', label: 'ใช้ doc.line() เป็นเส้นคั่นใน card' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
-    ],
-    starterCode: `function generate() {
-  const doc = new jsPDF(${pdfOptions});
-
-  const cardX = 25;
-  const cardY = 45;
-  const cardWidth = 160;
-  const cardHeight = 70;
-
-  doc.text('Status Card', cardX, 30);
-  doc.rect(cardX, cardY, cardWidth, cardHeight);
-  doc.text('Project', cardX + 10, cardY + 22);
-  doc.text('Visual Lesson Playground', cardX + 10, cardY + 38);
-  doc.text('Status: Draft', cardX + 10, cardY + 56);
-
-  return doc;
-}
-`,
-  },
-  {
-    id: 'image',
-    order: 5,
-    phase: 'Phase 1: Basic API',
-    type: 'lesson',
-    title: 'Image',
-    shortTitle: 'Image',
-    goal: 'วางรูปภาพลงบน PDF โดยกำหนดตำแหน่งและขนาดของกรอบรูปเอง',
-    explanation:
-      "รูปในบทนี้เตรียมไว้ให้แล้วใน public/images. ให้เก็บ path ของรูปไว้ก่อน จากนั้นใช้ getLessonImage(path) เพื่อแปลง path ให้เป็นข้อมูลรูปที่ jsPDF ใช้ได้ แล้วค่อยใช้ doc.addImage(...) วางรูปลงบนกระดาษ",
-    teachingPoints: [
-      "ไฟล์ใน public สามารถอ้างด้วย path ที่ขึ้นต้นด้วย / เช่น '/images/lesson-image-sample.svg'",
-      'getLessonImage(path) คือ helper ที่ระบบเตรียมไว้ให้ เพื่อแปลง path เป็น image data',
-      "doc.addImage(imageData, 'PNG', x, y, width, height) คือวางรูปลงในกรอบบนหน้า PDF",
-      'x/y คือมุมซ้ายบนของกรอบรูป ส่วน width/height คือขนาดรูปบน PDF ไม่ใช่ขนาด pixel ของไฟล์ต้นฉบับ',
-    ],
-    concepts: ['imagePath = ที่อยู่รูป', 'getLessonImage() = เตรียมรูป', 'doc.addImage() = วางรูป', 'width/height = ขนาดรูปบน PDF'],
-    visualKind: 'image-ratio',
-    imagePaths: ['/images/lesson-image-sample.svg'],
-    miniTask: 'ลองเปลี่ยนความกว้างหรือความสูงของภาพ แล้วสังเกตว่า preview เปลี่ยนอย่างไร',
-    practice: {
-      prompt: 'ใน function generate() ให้สร้าง doc, เตรียมรูปจาก imagePath แล้ววางรูปลงบน PDF ด้วย doc.addImage(...)',
-      requirements: [
-        "เริ่มด้วย const doc = new jsPDF({ unit: 'mm', format: 'a4' }) แล้วท้ายสุด return doc",
-        "เก็บ path รูปไว้ในตัวแปร imagePath เช่น '/images/lesson-image-sample.svg'",
-        'ใช้ getLessonImage(imagePath) เพื่อเตรียม image data',
-        'ใช้ doc.addImage(imageData, ... ) เพื่อวางภาพลง PDF',
-        'กำหนด x, y, width และ height ของรูปให้ชัดเจน',
-        'กด Run แล้วเห็น PDF preview สำเร็จ',
-      ],
-    },
-    completionChecklist: [
-      { id: 'image-path', label: 'เก็บ path รูปไว้ในตัวแปร imagePath' },
-      { id: 'get-lesson-image', label: 'ใช้ getLessonImage(imagePath)' },
-      { id: 'add-image', label: 'ใช้ doc.addImage() เพื่อวางรูปลง PDF' },
-      { id: 'image-size', label: 'กำหนด width และ height ของรูปใน doc.addImage()' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
-    ],
-    starterCode: `function generate() {
-  const doc = new jsPDF(${pdfOptions});
-
-  const imagePath = '/images/lesson-image-sample.svg';
-
-  doc.setFontSize(18);
-  doc.text('Image example', 20, 25);
-
-  // Helper available in this lesson: getLessonImage(path)
-  // Create image data from imagePath, then place it with addImage.
-
-  doc.setFontSize(10);
-  doc.text(imagePath, 20, 120);
-
-  return doc;
-}
-`,
-  },
-  {
-    id: 'thai-font',
-    order: 6,
-    phase: 'Phase 1: Basic API',
-    type: 'lesson',
-    title: 'Thai Font',
-    shortTitle: 'Thai Font',
-    goal: 'ใช้ฟอนต์ไทยใน PDF โดย register ฟอนต์ก่อน แล้วค่อยเลือกฟอนต์นั้นไปวาดข้อความ',
-    explanation:
-      'ฟอนต์ใน PDF ไม่เหมือน font บนเว็บที่เรียกชื่อแล้วใช้ได้เลย ก่อนวาดภาษาไทยต้องมีข้อมูลฟอนต์จากไฟล์ TTF ก่อน จากนั้นต้อง register หรือบอกให้ jsPDF รู้จักฟอนต์นี้ แล้วจึง setFont() เพื่อบอกเอกสารว่าจะใช้ฟอนต์นั้นกับข้อความถัดไป ตัวอย่างนี้มีฟอนต์ TH Sarabun New หนึ่งชุดใน pdf_font.js และใช้ style normal เท่านั้น',
-    teachingPoints: [
-      'การมีไฟล์ .ttf อย่างเดียวไม่พอ ต้องแปลงหรือเตรียมข้อมูลฟอนต์ให้ jsPDF อ่านได้ก่อน',
-      'register คือการลงชื่อฟอนต์ไว้ใน jsPDF เพื่อให้เรียกใช้ด้วย family/style ได้',
-      'registerThaiFont(doc) คือ helper ของบทเรียนนี้ที่ทำ addFileToVFS() เพื่อใส่ไฟล์ฟอนต์เข้า jsPDF และ addFont() เพื่อตั้งชื่อ family/style ให้เบื้องหลัง',
-      'PDF_FONTS.thai เก็บชื่อ family, fileName และ style ที่ระบบ register ไว้',
-      'ต้องเรียก doc.setFont(PDF_FONTS.thai.family, PDF_FONTS.thai.style) ก่อนวาดข้อความภาษาไทย',
-      'ฟอนต์หนึ่งไฟล์อาจมีแค่บาง style เช่น normal ถ้าต้องการ bold หรือ italic จริง ๆ ต้องมีไฟล์หรือข้อมูลฟอนต์ของ style นั้นเพิ่ม',
-      'glyph คือรูปวาดของตัวอักษรแต่ละตัวในฟอนต์ เช่น ก ข A B ถ้าฟอนต์ไม่มี glyph ภาษาไทย ข้อความไทยอาจแสดงผลผิด',
-      'ต้องเลือกฟอนต์ที่รองรับภาษาที่จะใช้ เพราะฟอนต์บางตัวไม่มี glyph ภาษาไทย ต่อให้ code ถูกก็อาจแสดงผลผิด',
-    ],
-    concepts: ['register = ให้ jsPDF รู้จักฟอนต์', 'TTF = ไฟล์ฟอนต์', 'PDF_FONTS = ข้อมูลฟอนต์', 'doc.setFont() = เลือกฟอนต์', 'glyph = รูปตัวอักษร'],
-    visualKind: 'font',
-    miniTask: 'register ฟอนต์ไทย เลือกฟอนต์นั้น แล้ววาดข้อความภาษาไทยให้แสดงผลใน PDF',
-    practice: {
-      prompt: 'ใน function generate() ให้สร้าง doc, register ฟอนต์ไทย, เลือกฟอนต์นั้นด้วย doc.setFont() แล้ววาดข้อความภาษาไทย',
-      requirements: [
-        "เริ่มด้วย const doc = new jsPDF({ unit: 'mm', format: 'a4' }) แล้วท้ายสุด return doc",
-        'เรียก registerThaiFont(doc) หลังสร้างเอกสาร เพื่อให้ jsPDF รู้จักฟอนต์ไทย',
-        'ใช้ doc.setFont() ด้วยข้อมูลจาก PDF_FONTS.thai ก่อนวาดข้อความไทย',
-        'วาดข้อความภาษาไทยอย่างน้อยหนึ่งบรรทัด',
-        'ใช้ style ที่มีอยู่จริงในตัวอย่างนี้คือ normal',
-        'กด Run แล้วเห็น PDF preview สำเร็จ',
-      ],
-    },
-    completionChecklist: [
-      { id: 'register-thai-font', label: 'เรียก registerThaiFont(doc) เพื่อให้ jsPDF รู้จักฟอนต์ไทย' },
-      { id: 'use-font-metadata', label: 'ใช้ข้อมูลฟอนต์จาก PDF_FONTS.thai' },
-      { id: 'set-thai-font', label: 'เรียก doc.setFont() เลือกฟอนต์ไทยก่อนวาดข้อความ' },
-      { id: 'thai-text', label: 'มีข้อความภาษาไทยใน doc.text()' },
-      { id: 'normal-style', label: "ใช้ style 'normal' ที่มีอยู่ในตัวอย่างนี้" },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
-    ],
-    starterCode: `function generate() {
-  const doc = new jsPDF(${pdfOptions});
-
-  registerThaiFont(doc);
-
-  doc.setFont(PDF_FONTS.thai.family, PDF_FONTS.thai.style);
-  doc.setFontSize(24);
-  doc.text('สวัสดี jsPDF', 20, 32);
-
-  doc.setFontSize(16);
-  doc.text('ข้อความนี้ใช้ฟอนต์จาก pdf_font.js', 20, 52);
-  doc.text('ฟอนต์ตัวอย่างนี้ register เป็น style normal', 20, 68);
-
-  return doc;
-}
-`,
-  },
-  {
-    id: 'data-mapping',
-    order: 7,
-    phase: 'Phase 1: Basic API',
-    type: 'lesson',
-    title: 'Data Mapping',
-    shortTitle: 'Data Mapping',
-    goal: 'นำข้อมูลจาก object และ array ไปวางบน PDF แทนการพิมพ์ข้อความคงที่ทุกบรรทัด',
-    explanation:
-      'PDF ที่ generate มักเริ่มจากข้อมูลจริง เช่น object หนึ่งชุดสำหรับข้อมูลโปรเจกต์ และ array สำหรับรายการหลายแถว milestones ในบทนี้หมายถึงรายการหมุดหมายหรือขั้นตอนของงาน บทนี้ให้ map ค่า property ไปลงตำแหน่งที่ออกแบบไว้ และใช้ index ของ array เพื่อคำนวณตำแหน่ง y ของแต่ละแถว',
-    teachingPoints: [
-      'object เหมาะกับข้อมูลหนึ่ง record เช่น project.name, project.date, project.owner',
-      'array เหมาะกับข้อมูลหลายแถว เช่น milestones หรือ task list',
-      'milestones คือรายการหมุดหมายของโปรเจกต์ แต่ละแถวมี label และ value',
-      'เวลา render array ให้ใช้ index ช่วยคำนวณ y เพื่อให้แต่ละแถวไม่ทับกัน',
-      'แยก label กับ value ให้ชัด จะทำให้ layout อ่านง่ายและแก้ code ทีหลังง่ายขึ้น',
-      'หลังจาก map ข้อมูลลง PDF ได้แล้ว บทถัดไปจะดูว่าถ้าข้อความ value ยาวเกินพื้นที่ควร wrap อย่างไร',
-    ],
-    concepts: ['object = ข้อมูลหนึ่งชุด', 'array = รายการหลายแถว', 'project.name = อ่านค่า', 'forEach() = วนรายการ', 'index = เลื่อน y'],
-    visualKind: 'data-mapping',
-    miniTask: 'ลองเพิ่ม milestone อีกหนึ่งแถว แล้วกด Run เพื่อดูการคำนวณตำแหน่ง y',
-    practice: {
-      prompt: 'ใน function generate() ให้สร้าง doc, สร้าง project object กับ milestones array แล้วนำค่าจากข้อมูลเหล่านั้นไปวางบน PDF',
-      requirements: [
-        "เริ่มด้วย const doc = new jsPDF({ unit: 'mm', format: 'a4' }) แล้วท้ายสุด return doc",
-        'มี object ชื่อ project สำหรับข้อมูลหลักหนึ่งชุด',
-        'มี array ชื่อ milestones สำหรับรายการหลายแถว',
-        'ใช้ property เช่น project.name หรือ project.date ใน doc.text()',
-        'loop ผ่าน milestones ด้วย forEach() หรือ map()',
-        'ใช้ index เพื่อคำนวณตำแหน่ง y ของแต่ละแถว',
-        'กด Run แล้วเห็น PDF preview สำเร็จ',
-      ],
-    },
-    completionChecklist: [
-      { id: 'data-object', label: 'สร้าง object ชื่อ project สำหรับข้อมูลหลัก' },
-      { id: 'data-array', label: 'สร้าง array ชื่อ milestones สำหรับรายการหลายแถว' },
-      { id: 'property-values', label: 'นำค่า property จาก project ไปใช้ใน doc.text()' },
-      { id: 'array-iteration', label: 'วนผ่าน milestones ด้วย forEach() หรือ map()' },
-      { id: 'row-y-position', label: 'ใช้ index คำนวณตำแหน่ง y ของแต่ละแถว' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
-    ],
-    starterCode: `function generate() {
-  const doc = new jsPDF(${pdfOptions});
-
-  const project = {
-    name: 'Visual Lesson Playground',
-    date: '2026-06-11',
-    owner: 'Toom',
-    status: 'Draft',
-  };
-
-  const milestones = [
-    { label: 'Brief', value: 'Ready' },
-    { label: 'Layout', value: 'In progress' },
-    { label: 'Review', value: 'Next' },
-  ];
-
-  doc.setFontSize(18);
-  doc.text('Project Snapshot', 20, 25);
-
-  doc.setFontSize(11);
-  doc.text('Project', 20, 45);
-  doc.text(project.name, 60, 45);
-  doc.text('Date', 20, 58);
-  doc.text(project.date, 60, 58);
-  doc.text('Owner', 20, 71);
-  doc.text(project.owner, 60, 71);
-  doc.text('Status', 115, 71);
-  doc.text(project.status, 145, 71);
-
-  doc.text('Milestones', 20, 92);
-
-  milestones.forEach((item, index) => {
-    const y = 108 + index * 12;
-    doc.text(item.label, 28, y);
-    doc.text(item.value, 95, y);
-  });
-
-  return doc;
-}
-`,
-  },
-  {
-    id: 'text-wrap',
-    order: 8,
-    phase: 'Phase 1: Basic API',
-    type: 'lesson',
-    title: 'Text Wrap',
-    shortTitle: 'Text Wrap',
-    goal: 'แบ่งข้อความยาวให้ขึ้นหลายบรรทัดก่อนวางลง PDF',
-    explanation:
-      'เมื่อเอาข้อมูลจริงมาใส่ PDF ค่าในตัวแปรอาจยาวเกินพื้นที่ที่ออกแบบไว้ doc.text() ไม่ได้เดา layout ให้เสมอไป จึงใช้ doc.splitTextToSize(text, maxWidth) เพื่อแบ่งข้อความเป็นหลายบรรทัดก่อนส่งให้ doc.text()',
-    teachingPoints: [
-      'กำหนด maxWidth เป็นความกว้างของพื้นที่ข้อความในหน่วยเดียวกับเอกสาร เช่น mm',
-      'doc.splitTextToSize(text, maxWidth) คืนค่าเป็น array ของบรรทัดข้อความ',
-      'doc.text() รับ array ของบรรทัดได้ และจะวาดลงมาเป็นหลายบรรทัด',
-      'ควรเก็บผล wrap ไว้ในตัวแปร เช่น wrappedSummary เพื่ออ่าน code ง่ายและนำจำนวนบรรทัดไปคำนวณต่อได้',
-      'การ wrap เป็นขั้นพื้นฐานก่อนคิดเรื่องความสูงกล่อง การตัดหน้า หรือ layout ที่ซับซ้อนขึ้น',
-    ],
-    concepts: ['long text = ข้อความยาว', 'maxWidth = ความกว้างกรอบ', 'splitTextToSize() = แบ่งบรรทัด', 'wrappedSummary = ผลลัพธ์หลายบรรทัด'],
-    visualKind: 'text-wrap',
-    miniTask: 'ลองปรับ maxWidth ให้แคบลง แล้วดูจำนวนบรรทัดที่เพิ่มขึ้นใน preview',
-    practice: {
-      prompt: 'ใน function generate() ให้สร้าง doc, เตรียม project.summary ที่ยาว, แบ่งบรรทัดด้วย splitTextToSize() แล้วค่อยส่งผลลัพธ์เข้า doc.text()',
-      requirements: [
-        "เริ่มด้วย const doc = new jsPDF({ unit: 'mm', format: 'a4' }) แล้วท้ายสุด return doc",
-        'มีข้อมูล summary เป็นข้อความยาวใน project object',
-        'กำหนด maxWidth สำหรับพื้นที่ข้อความ',
-        'ใช้ doc.splitTextToSize(project.summary, maxWidth)',
-        'เก็บผลลัพธ์ไว้ในตัวแปร wrappedSummary',
-        'ส่ง wrappedSummary เข้า doc.text()',
-        'กด Run แล้วเห็น PDF preview สำเร็จ',
-      ],
-    },
-    completionChecklist: [
-      { id: 'long-summary', label: 'มี project.summary เป็นข้อความยาว' },
-      { id: 'max-width', label: 'กำหนดตัวแปร maxWidth สำหรับพื้นที่ข้อความ' },
-      { id: 'split-text', label: 'ใช้ doc.splitTextToSize(project.summary, maxWidth)' },
-      { id: 'wrapped-variable', label: 'เก็บผล wrap ไว้ในตัวแปร wrappedSummary' },
-      { id: 'text-wrapped-lines', label: 'ส่ง wrappedSummary เข้า doc.text()' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
-    ],
-    starterCode: `function generate() {
-  const doc = new jsPDF(${pdfOptions});
-
-  const project = {
-    name: 'Visual Lesson Playground',
-    summary: 'This lesson summary is intentionally long so it can show how text wraps when the available PDF space is narrower than the original sentence.',
-  };
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.text('Wrapped Summary', 20, 25);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
-  doc.text('Project: ' + project.name, 20, 42);
-
-  const textX = 24;
-  const textY = 62;
-  const maxWidth = 145;
-  const wrappedSummary = doc.splitTextToSize(project.summary, maxWidth);
-
-  doc.rect(20, 50, maxWidth + 8, 58);
-  doc.text(wrappedSummary, textX, textY);
-
-  doc.setFontSize(10);
-  doc.text('Wrapped lines: ' + wrappedSummary.length, textX, 122);
-
-  return doc;
-}
-`,
-  },
-  {
-    id: 'one-page-layout',
-    order: 9,
-    phase: 'Phase 1: Basic API',
-    type: 'lesson',
-    title: 'Basic One-page Layout',
-    shortTitle: 'One-page Layout',
-    goal: 'ประกอบสิ่งที่เรียนมาให้เป็นเอกสารหน้าเดียวที่มีหัวเรื่อง กล่องข้อมูล summary และ footer',
-    explanation:
-      'บทนี้คือการรวมพื้นฐานให้เป็น layout หน้าเดียว ให้คิดเป็นพื้นที่บนกระดาษก่อน: header อยู่บนสุด, กล่องข้อมูลอยู่ถัดลงมา, summary อยู่กลางหน้า, milestones/status อยู่ช่วงล่าง และ footer อยู่ท้ายหน้า ตัวแปรอย่าง pageMargin และ contentWidth ช่วยให้ทุกส่วนวางตรงกันและแก้ง่าย',
-    teachingPoints: [
-      'pageMargin คือระยะขอบซ้าย/ขวาที่ใช้ซ้ำทั้งหน้า',
-      'contentWidth คือความกว้างพื้นที่หลักที่ใช้กับเส้นและกล่อง',
-      'แบ่งหน้าเป็น section ก่อนค่อยวาด: header, project info, summary, milestones, footer',
-      'ใช้ rect และ line เป็นโครงสร้างสายตา ไม่ใช่แค่ตกแต่ง',
-      'ใช้ splitTextToSize() กับ summary ยาว ๆ เพื่อให้เนื้อหาไม่ล้นพื้นที่ที่ตั้งใจไว้',
-      'footer ควรอยู่ใกล้ท้ายหน้าและใช้เป็นสัญญาณว่าเอกสารหนึ่งหน้าจบแล้ว',
-    ],
-    concepts: ['pageMargin = ขอบหน้า', 'contentWidth = พื้นที่หลัก', 'section = พื้นที่แต่ละช่วง', 'summary wrap', 'footer = ท้ายหน้า'],
-    visualKind: 'layout',
-    miniTask: 'ประกอบ Project Brief PDF หน้าเดียวด้วย header, กล่องข้อมูล, summary, milestones และ footer',
-    practice: {
-      prompt: 'ใน function generate() ให้สร้าง doc แล้วประกอบ Project Brief หน้าเดียว โดยใช้ข้อมูลจาก project object และตัวแปร layout คุมตำแหน่งหลัก',
-      requirements: [
-        "เริ่มด้วย const doc = new jsPDF({ unit: 'mm', format: 'a4' }) แล้วท้ายสุด return doc",
-        'กำหนด pageMargin และ contentWidth เพื่อคุมขอบกับความกว้างหลักของหน้า',
-        'มี header/title ด้านบนของหน้า',
-        'ใช้ doc.rect() อย่างน้อย 2 กล่องเพื่อแบ่ง section',
-        'ใช้ doc.line() เป็น divider หรือ footer line',
-        'ใช้ doc.splitTextToSize() เพื่อ wrap summary',
-        'ใช้ข้อมูลจาก project object เช่น project.name',
-        'มี footer ใกล้ท้ายหน้า',
-        'กด Run แล้วเห็น PDF preview สำเร็จ',
-      ],
-    },
-    completionChecklist: [
-      { id: 'page-margin', label: 'กำหนดตัวแปร pageMargin สำหรับขอบหน้า' },
-      { id: 'content-width', label: 'กำหนดตัวแปร contentWidth สำหรับความกว้างพื้นที่หลัก' },
-      { id: 'section-boxes', label: 'ใช้ doc.rect() อย่างน้อย 2 กล่องเพื่อแบ่ง section' },
-      { id: 'divider-line', label: 'ใช้ doc.line() เป็น divider หรือ footer line' },
-      { id: 'wrapped-summary', label: 'ใช้ doc.splitTextToSize() เพื่อ wrap project.summary' },
-      { id: 'project-data', label: 'ใช้ข้อมูลจาก project object ใน layout' },
-      { id: 'footer', label: 'มี footer ใกล้ท้ายหน้า' },
-      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
-    ],
-    starterCode: `function generate() {
-  const doc = new jsPDF(${pdfOptions});
+const stage2 = `function generate() {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
   const pageMargin = 20;
   const contentWidth = 170;
   const headerY = 24;
-  const sectionGap = 12;
+  const dateX = pageMargin + contentWidth;
 
-  const project = {
-    name: 'Visual Lesson Playground',
-    date: '2026-06-11',
-    owner: 'Toom',
-    status: 'Ready for checkpoint',
-    summary: 'This one-page brief combines data mapping, styled boxes, wrapped text, divider lines, and a footer so the generated PDF feels like a complete document.',
-    milestones: [
-      { label: 'Lessons 1-4', value: 'Core drawing APIs' },
-      { label: 'Lessons 5-8', value: 'Assets, fonts, data, wrap' },
-    ],
-  };
-
-  const infoY = headerY + 24;
-  const summaryY = infoY + 52;
-  const milestoneY = summaryY + 66;
-  const footerY = 278;
-  const summaryMaxWidth = contentWidth - 16;
-  const wrappedSummary = doc.splitTextToSize(project.summary, summaryMaxWidth);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(22);
   doc.text('Project Brief', pageMargin, headerY);
-
-  doc.setDrawColor(37, 87, 214);
-  doc.line(pageMargin, headerY + 8, pageMargin + contentWidth, headerY + 8);
-
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(203, 213, 225);
-  doc.rect(pageMargin, infoY, contentWidth, 40, 'FD');
-
-  doc.setFontSize(13);
-  doc.text(project.name, pageMargin + 8, infoY + 14);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.text('Date: ' + project.date, pageMargin + 8, infoY + 27);
-  doc.text('Owner: ' + project.owner, pageMargin + 70, infoY + 27);
-  doc.text('Status: ' + project.status, pageMargin + 118, infoY + 27);
-
-  doc.rect(pageMargin, summaryY, contentWidth, 52);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.text('Summary', pageMargin + 8, summaryY + 13);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.text(wrappedSummary, pageMargin + 8, summaryY + 27);
-
-  doc.rect(pageMargin, milestoneY, contentWidth, 42);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.text('Milestones', pageMargin + 8, milestoneY + 13);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  project.milestones.forEach((item, index) => {
-    const y = milestoneY + 27 + index * sectionGap;
-    doc.text(item.label, pageMargin + 8, y);
-    doc.text(item.value, pageMargin + 80, y);
-  });
-
-  doc.line(pageMargin, footerY - 8, pageMargin + contentWidth, footerY - 8);
-  doc.setFontSize(9);
-  doc.text('Generated with jsPDF Visual Lessons', pageMargin, footerY);
+  doc.text('2026-06-13', dateX, headerY, { align: 'right' });
 
   return doc;
 }
-`,
+`;
+
+const stage3 = `function generate() {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  const pageMargin = 20;
+  const contentWidth = 170;
+  const headerY = 24;
+  const dateX = pageMargin + contentWidth;
+  const dividerY = 32;
+  const infoY = 44;
+  const summaryY = 106;
+  const milestoneY = 178;
+
+  doc.text('Project Brief', pageMargin, headerY);
+  doc.text('2026-06-13', dateX, headerY, { align: 'right' });
+  doc.line(pageMargin, dividerY, pageMargin + contentWidth, dividerY);
+
+  doc.rect(pageMargin, infoY, contentWidth, 44);
+  doc.rect(pageMargin, summaryY, contentWidth, 56);
+  doc.rect(pageMargin, milestoneY, contentWidth, 48);
+
+  return doc;
+}
+`;
+
+const stage4 = `function generate() {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  const pageMargin = 20;
+  const contentWidth = 170;
+  const headerY = 24;
+  const dateX = pageMargin + contentWidth;
+  const dividerY = 32;
+  const infoY = 44;
+  const summaryY = 106;
+  const milestoneY = 178;
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(22);
+  doc.text('Project Brief', pageMargin, headerY);
+
+  doc.setFontSize(12);
+  doc.setTextColor(71, 85, 105);
+  doc.text('2026-06-13', dateX, headerY, { align: 'right' });
+
+  doc.setDrawColor(36, 87, 214);
+  doc.setLineWidth(0.8);
+  doc.line(pageMargin, dividerY, pageMargin + contentWidth, dividerY);
+
+  doc.setDrawColor(203, 213, 225);
+  doc.setFillColor(248, 250, 252);
+  doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
+  doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(18);
+  doc.text('Project Info', pageMargin + 8, infoY + 14);
+  doc.text('Summary', pageMargin + 8, summaryY + 14);
+  doc.text('Milestones', pageMargin + 8, milestoneY + 14);
+
+  doc.setTextColor(71, 85, 105);
+  doc.setFontSize(16);
+  doc.text('Name: jsPDF Visual Lessons', pageMargin + 8, infoY + 30);
+  doc.text('Owner: Learning Team', pageMargin + 8, infoY + 39);
+  doc.text('Summary text will be wrapped in a later lesson.', pageMargin + 8, summaryY + 30);
+  doc.text('Foundation: page, text, shapes, and style', pageMargin + 8, milestoneY + 30);
+
+  return doc;
+}
+`;
+
+const stage5 = `function generate() {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  const pageMargin = 20;
+  const contentWidth = 170;
+  const headerY = 24;
+  const dateX = pageMargin + contentWidth;
+  const dividerY = 32;
+  const infoY = 44;
+  const summaryY = 106;
+  const milestoneY = 178;
+  const imagePath = '/images/lesson-image-sample.svg';
+  const imageData = getLessonImage(imagePath);
+  const imageX = 150;
+  const imageY = 54;
+  const imageWidth = 36;
+  const imageHeight = 24;
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(22);
+  doc.text('Project Brief', pageMargin, headerY);
+
+  doc.setFontSize(12);
+  doc.setTextColor(71, 85, 105);
+  doc.text('2026-06-13', dateX, headerY, { align: 'right' });
+
+  doc.setDrawColor(36, 87, 214);
+  doc.setLineWidth(0.8);
+  doc.line(pageMargin, dividerY, pageMargin + contentWidth, dividerY);
+
+  doc.setDrawColor(203, 213, 225);
+  doc.setFillColor(248, 250, 252);
+  doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
+  doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+
+  doc.addImage(imageData, 'PNG', imageX, imageY, imageWidth, imageHeight);
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(18);
+  doc.text('Project Info', pageMargin + 8, infoY + 14);
+  doc.text('Summary', pageMargin + 8, summaryY + 14);
+  doc.text('Milestones', pageMargin + 8, milestoneY + 14);
+
+  doc.setTextColor(71, 85, 105);
+  doc.setFontSize(16);
+  doc.text('Name: jsPDF Visual Lessons', pageMargin + 8, infoY + 30);
+  doc.text('Owner: Learning Team', pageMargin + 8, infoY + 39);
+  doc.text('Summary text will be wrapped in a later lesson.', pageMargin + 8, summaryY + 30);
+  doc.text('Foundation: page, text, shapes, and style', pageMargin + 8, milestoneY + 30);
+
+  return doc;
+}
+`;
+
+const stage6 = `function generate() {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  registerThaiFont(doc);
+  doc.setFont(PDF_FONTS.thai.family, PDF_FONTS.thai.style);
+
+  const pageMargin = 20;
+  const contentWidth = 170;
+  const headerY = 24;
+  const dateX = pageMargin + contentWidth;
+  const dividerY = 32;
+  const infoY = 44;
+  const summaryY = 106;
+  const milestoneY = 178;
+  const imagePath = '/images/lesson-image-sample.svg';
+  const imageData = getLessonImage(imagePath);
+  const imageX = 150;
+  const imageY = 54;
+  const imageWidth = 36;
+  const imageHeight = 24;
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(22);
+  doc.text('Project Brief', pageMargin, headerY);
+
+  doc.setFontSize(12);
+  doc.setTextColor(71, 85, 105);
+  doc.text('2026-06-13', dateX, headerY, { align: 'right' });
+
+  doc.setDrawColor(36, 87, 214);
+  doc.setLineWidth(0.8);
+  doc.line(pageMargin, dividerY, pageMargin + contentWidth, dividerY);
+
+  doc.setDrawColor(203, 213, 225);
+  doc.setFillColor(248, 250, 252);
+  doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
+  doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+
+  doc.addImage(imageData, 'PNG', imageX, imageY, imageWidth, imageHeight);
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(18);
+  doc.text('ข้อมูลโปรเจกต์', pageMargin + 8, infoY + 14);
+  doc.text('สรุปภาพรวม', pageMargin + 8, summaryY + 14);
+  doc.text('หมุดหมายงาน', pageMargin + 8, milestoneY + 14);
+
+  doc.setTextColor(71, 85, 105);
+  doc.setFontSize(16);
+  doc.text('ชื่อ: บทเรียน jsPDF แบบเห็นภาพ', pageMargin + 8, infoY + 30);
+  doc.text('เจ้าของ: ทีมเรียนรู้', pageMargin + 8, infoY + 39);
+  doc.text('ข้อความสรุปภาษาไทยจะถูก wrap ในบทถัดไป', pageMargin + 8, summaryY + 30);
+  doc.text('พื้นฐาน: หน้าเอกสาร ข้อความ กล่อง และ style', pageMargin + 8, milestoneY + 30);
+
+  return doc;
+}
+`;
+
+const stage7 = `function generate() {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  registerThaiFont(doc);
+  doc.setFont(PDF_FONTS.thai.family, PDF_FONTS.thai.style);
+
+  const project = {
+    name: 'บทเรียน jsPDF แบบเห็นภาพ',
+    date: '2026-06-13',
+    owner: 'ทีมเรียนรู้',
+    status: 'พร้อมตรวจทาน',
+    imagePath: '/images/lesson-image-sample.svg',
+    summary: 'พื้นที่ฝึกสร้าง PDF ที่ค่อย ๆ ประกอบเอกสารหนึ่งใบจากหน้าเปล่า ไปสู่เอกสาร Project Brief ที่มีข้อมูล รูปภาพ สไตล์ และรายการหมุดหมายครบถ้วน',
+    milestones: [
+      { label: 'พื้นฐาน', value: 'หน้าเอกสาร ข้อความ กล่อง และ style' },
+      { label: 'เนื้อหา', value: 'รูปภาพ ฟอนต์ไทย ข้อมูล และการ wrap' },
+    ],
+  };
+
+  const pageMargin = 20;
+  const contentWidth = 170;
+  const headerY = 24;
+  const dateX = pageMargin + contentWidth;
+  const dividerY = 32;
+  const infoY = 44;
+  const summaryY = 106;
+  const milestoneY = 178;
+  const imageData = getLessonImage(project.imagePath);
+  const imageX = 150;
+  const imageY = 54;
+  const imageWidth = 36;
+  const imageHeight = 24;
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(22);
+  doc.text('Project Brief', pageMargin, headerY);
+
+  doc.setFontSize(12);
+  doc.setTextColor(71, 85, 105);
+  doc.text(project.date, dateX, headerY, { align: 'right' });
+
+  doc.setDrawColor(36, 87, 214);
+  doc.setLineWidth(0.8);
+  doc.line(pageMargin, dividerY, pageMargin + contentWidth, dividerY);
+
+  doc.setDrawColor(203, 213, 225);
+  doc.setFillColor(248, 250, 252);
+  doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
+  doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+
+  doc.addImage(imageData, 'PNG', imageX, imageY, imageWidth, imageHeight);
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(18);
+  doc.text('ข้อมูลโปรเจกต์', pageMargin + 8, infoY + 14);
+  doc.text('สรุปภาพรวม', pageMargin + 8, summaryY + 14);
+  doc.text('หมุดหมายงาน', pageMargin + 8, milestoneY + 14);
+
+  doc.setTextColor(71, 85, 105);
+  doc.setFontSize(16);
+  doc.text('ชื่อ: ' + project.name, pageMargin + 8, infoY + 30);
+  doc.text('เจ้าของ: ' + project.owner, pageMargin + 8, infoY + 39);
+  doc.text('สถานะ: ' + project.status, pageMargin + 74, infoY + 39);
+  doc.text(project.summary, pageMargin + 8, summaryY + 30);
+
+  project.milestones.forEach((item, index) => {
+    const rowY = milestoneY + 30 + index * 10;
+    doc.text(item.label + ': ' + item.value, pageMargin + 8, rowY);
+  });
+
+  return doc;
+}
+`;
+
+const stage8 = `function generate() {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  registerThaiFont(doc);
+  doc.setFont(PDF_FONTS.thai.family, PDF_FONTS.thai.style);
+
+  const project = {
+    name: 'บทเรียน jsPDF แบบเห็นภาพ',
+    date: '2026-06-13',
+    owner: 'ทีมเรียนรู้',
+    status: 'พร้อมตรวจทาน',
+    imagePath: '/images/lesson-image-sample.svg',
+    summary: 'พื้นที่ฝึกสร้าง PDF ที่ค่อย ๆ ประกอบเอกสารหนึ่งใบจากหน้าเปล่า ไปสู่เอกสาร Project Brief ที่มีข้อมูล รูปภาพ สไตล์ และรายการหมุดหมายครบถ้วน เพื่อให้ผู้เรียนเห็นว่าเอกสารจริงเกิดจากการวางองค์ประกอบหลายส่วนร่วมกัน',
+    milestones: [
+      { label: 'พื้นฐาน', value: 'หน้าเอกสาร ข้อความ กล่อง และ style' },
+      { label: 'เนื้อหา', value: 'รูปภาพ ฟอนต์ไทย ข้อมูล และการ wrap' },
+    ],
+  };
+
+  const pageMargin = 20;
+  const contentWidth = 170;
+  const headerY = 24;
+  const dateX = pageMargin + contentWidth;
+  const dividerY = 32;
+  const infoY = 44;
+  const summaryY = 106;
+  const milestoneY = 178;
+  const imageData = getLessonImage(project.imagePath);
+  const imageX = 150;
+  const imageY = 54;
+  const imageWidth = 36;
+  const imageHeight = 24;
+  const summaryWidth = contentWidth - 16;
+  const wrappedSummary = doc.splitTextToSize(project.summary, summaryWidth);
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(22);
+  doc.text('Project Brief', pageMargin, headerY);
+
+  doc.setFontSize(12);
+  doc.setTextColor(71, 85, 105);
+  doc.text(project.date, dateX, headerY, { align: 'right' });
+
+  doc.setDrawColor(36, 87, 214);
+  doc.setLineWidth(0.8);
+  doc.line(pageMargin, dividerY, pageMargin + contentWidth, dividerY);
+
+  doc.setDrawColor(203, 213, 225);
+  doc.setFillColor(248, 250, 252);
+  doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
+  doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+
+  doc.addImage(imageData, 'PNG', imageX, imageY, imageWidth, imageHeight);
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(18);
+  doc.text('ข้อมูลโปรเจกต์', pageMargin + 8, infoY + 14);
+  doc.text('สรุปภาพรวม', pageMargin + 8, summaryY + 14);
+  doc.text('หมุดหมายงาน', pageMargin + 8, milestoneY + 14);
+
+  doc.setTextColor(71, 85, 105);
+  doc.setFontSize(16);
+  doc.text('ชื่อ: ' + project.name, pageMargin + 8, infoY + 30);
+  doc.text('เจ้าของ: ' + project.owner, pageMargin + 8, infoY + 39);
+  doc.text('สถานะ: ' + project.status, pageMargin + 74, infoY + 39);
+  doc.text(wrappedSummary, pageMargin + 8, summaryY + 30);
+
+  project.milestones.forEach((item, index) => {
+    const rowY = milestoneY + 30 + index * 10;
+    doc.text(item.label + ': ' + item.value, pageMargin + 8, rowY);
+  });
+
+  return doc;
+}
+`;
+
+const stage9 = `function generate() {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  registerThaiFont(doc);
+  doc.setFont(PDF_FONTS.thai.family, PDF_FONTS.thai.style);
+
+  const project = {
+    name: 'บทเรียน jsPDF แบบเห็นภาพ',
+    date: '2026-06-13',
+    owner: 'ทีมเรียนรู้',
+    status: 'พร้อมตรวจทาน',
+    imagePath: '/images/lesson-image-sample.svg',
+    summary: 'พื้นที่ฝึกสร้าง PDF ที่ค่อย ๆ ประกอบเอกสารหนึ่งใบจากหน้าเปล่า ไปสู่เอกสาร Project Brief ที่มีข้อมูล รูปภาพ สไตล์ และรายการหมุดหมายครบถ้วน เพื่อให้ผู้เรียนเห็นว่าเอกสารจริงเกิดจากการวางองค์ประกอบหลายส่วนร่วมกัน',
+    milestones: [
+      { label: 'พื้นฐาน', value: 'หน้าเอกสาร ข้อความ กล่อง และ style' },
+      { label: 'เนื้อหา', value: 'รูปภาพ ฟอนต์ไทย ข้อมูล และการ wrap' },
+    ],
+  };
+
+  const pageMargin = 20;
+  const contentWidth = 170;
+  const headerY = 24;
+  const dateX = pageMargin + contentWidth;
+  const dividerY = 32;
+  const infoY = 44;
+  const summaryY = 106;
+  const milestoneY = 178;
+  const footerY = 278;
+  const imageData = getLessonImage(project.imagePath);
+  const imageX = 150;
+  const imageY = 54;
+  const imageWidth = 36;
+  const imageHeight = 24;
+  const summaryWidth = contentWidth - 16;
+  const wrappedSummary = doc.splitTextToSize(project.summary, summaryWidth);
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(22);
+  doc.text('Project Brief', pageMargin, headerY);
+
+  doc.setFontSize(12);
+  doc.setTextColor(71, 85, 105);
+  doc.text(project.date, dateX, headerY, { align: 'right' });
+
+  doc.setDrawColor(36, 87, 214);
+  doc.setLineWidth(0.8);
+  doc.line(pageMargin, dividerY, pageMargin + contentWidth, dividerY);
+
+  doc.setDrawColor(203, 213, 225);
+  doc.setFillColor(248, 250, 252);
+  doc.rect(pageMargin, infoY, contentWidth, 44, 'FD');
+  doc.rect(pageMargin, summaryY, contentWidth, 56, 'FD');
+  doc.rect(pageMargin, milestoneY, contentWidth, 48, 'FD');
+
+  doc.addImage(imageData, 'PNG', imageX, imageY, imageWidth, imageHeight);
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(18);
+  doc.text('ข้อมูลโปรเจกต์', pageMargin + 8, infoY + 14);
+  doc.text('สรุปภาพรวม', pageMargin + 8, summaryY + 14);
+  doc.text('หมุดหมายงาน', pageMargin + 8, milestoneY + 14);
+
+  doc.setTextColor(71, 85, 105);
+  doc.setFontSize(16);
+  doc.text('ชื่อ: ' + project.name, pageMargin + 8, infoY + 30);
+  doc.text('เจ้าของ: ' + project.owner, pageMargin + 8, infoY + 39);
+  doc.text('สถานะ: ' + project.status, pageMargin + 74, infoY + 39);
+  doc.text(wrappedSummary, pageMargin + 8, summaryY + 30);
+
+  project.milestones.forEach((item, index) => {
+    const rowY = milestoneY + 30 + index * 10;
+    doc.text(item.label + ': ' + item.value, pageMargin + 8, rowY);
+  });
+
+  doc.setDrawColor(203, 213, 225);
+  doc.line(pageMargin, footerY - 8, pageMargin + contentWidth, footerY - 8);
+  doc.setFontSize(12);
+  doc.text('Generated by jsPDF Visual Lesson Playground', pageMargin, footerY);
+
+  return doc;
+}
+`;
+
+export const projectBriefSnapshots = [
+  blankStarterCode,
+  stage1,
+  stage2,
+  stage3,
+  stage4,
+  stage5,
+  stage6,
+  stage7,
+  stage8,
+  stage9,
+];
+
+const imagePaths = ['/images/lesson-image-sample.svg'];
+
+const blueprint = [
+  {
+    label: 'Header',
+    detail: 'x 20, y 24: Project Brief อยู่ฝั่งซ้าย, project.date อยู่ฝั่งขวาที่ x 190 พร้อม align right',
+  },
+  {
+    label: 'Divider',
+    detail: 'เส้นใต้ header จาก x 20 ถึง x 190 ที่ y 32',
+  },
+  {
+    label: 'Info card',
+    detail: 'กล่องข้อมูลโปรเจกต์ x 20, y 44, width 170, height 44 และมีภาพที่ x 150, y 54, size 36 x 24 mm',
+  },
+  {
+    label: 'Summary card',
+    detail: 'กล่อง summary x 20, y 106, width 170, height 56 และใช้ wrappedSummary วางในกล่อง',
+  },
+  {
+    label: 'Milestones card',
+    detail: 'กล่อง milestones x 20, y 178, width 170, height 48 และ render rows ด้วย project.milestones',
+  },
+  {
+    label: 'Footer',
+    detail: 'footer line ที่ y 270 และข้อความ signature ที่ y 278',
+  },
+];
+
+const designContract = [
+  { label: 'Page', detail: "ใช้ A4 หน่วย mm ด้วย new jsPDF({ unit: 'mm', format: 'a4' })" },
+  { label: 'Margin', detail: 'ใช้ pageMargin = 20 และ contentWidth = 170 เป็นแกน layout' },
+  { label: 'Title', detail: 'หัวเอกสารใช้ doc.setFontSize(22) และสี #111827' },
+  { label: 'Section heading', detail: 'หัวข้อ card ใช้ doc.setFontSize(18)' },
+  { label: 'Body', detail: 'ข้อความรายละเอียดใช้ doc.setFontSize(16) และสี #475569' },
+  { label: 'Accent line', detail: 'เส้นหลักใช้ doc.setDrawColor(36, 87, 214)' },
+  { label: 'Card', detail: 'card ใช้ border #cbd5e1 และ fill #f8fafc' },
+];
+
+export const lessons = [
+  {
+    id: 'hello-pdf',
+    order: 1,
+    phase: 'Document 1: Project Brief',
+    type: 'lesson',
+    title: 'Start the Project Brief',
+    shortTitle: 'Start',
+    goal: 'สร้างหน้า A4 หน่วย mm สำหรับเอกสาร Project Brief และ return doc ให้ preview ใช้ได้',
+    explanation:
+      "บทแรกคือฐานของเอกสารทั้งใบ เราไม่ได้สร้างตัวอย่างลอย ๆ แต่เริ่มกระดาษ A4 ที่บทถัดไปจะค่อย ๆ เติม header, card, image, data และ footer ลงไป",
+    teachingPoints: [
+      "new jsPDF({ unit: 'mm', format: 'a4' }) คือการสร้างกระดาษ A4 ที่ใช้หน่วยมิลลิเมตร",
+      'doc คือเอกสารใบเดียวที่ทุกบทจะค่อย ๆ วาดเพิ่ม',
+      'ต้อง return doc ทุกครั้งเพื่อให้ระบบ render preview และตรวจ checklist ได้',
+    ],
+    concepts: ['doc = เอกสารใบเดียว', 'A4', 'unit mm', 'return doc'],
+    visualKind: 'none',
+    miniTask: 'สร้างหน้าเอกสารเปล่าที่พร้อมให้บทถัดไปเติม header',
+    practice: {
+      prompt: 'ใน function generate() ให้สร้าง doc เป็น A4/mm แล้ว return doc',
+      requirements: [
+        "ใช้ new jsPDF({ unit: 'mm', format: 'a4' })",
+        'เก็บเอกสารไว้ในตัวแปร doc',
+        'ท้าย function ต้อง return doc',
+      ],
+    },
+    completionChecklist: [
+      { id: 'page-a4-mm', label: 'สร้างเอกสาร A4 ด้วยหน่วย mm' },
+      { id: 'return-doc', label: 'return doc จาก function generate()' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+    ],
+    starterCode: blankStarterCode,
+    starterCodeVersion: projectBriefStarterVersion,
+    solutionCode: stage1,
+  },
+  {
+    id: 'xy-position',
+    order: 2,
+    phase: 'Document 1: Project Brief',
+    type: 'lesson',
+    title: 'Header Text',
+    shortTitle: 'Header',
+    goal: 'วางหัวเอกสาร Project Brief และวันที่ลงตำแหน่งบนของหน้าให้ตรง blueprint',
+    explanation:
+      "บทนี้ใช้ doc.text(text, x, y, options) เพื่อสร้าง header จริงของเอกสาร ค่า x/y จึงไม่ใช่แค่ทดลอง แต่เป็นตำแหน่งบน blueprint ของเอกสาร Project Brief",
+    teachingPoints: [
+      'pageMargin = 20 คือจุดเริ่มฝั่งซ้ายของเอกสาร',
+      'dateX = pageMargin + contentWidth คือขอบขวาของพื้นที่ทำงาน',
+      "ใช้ { align: 'right' } เป็น argument ตัวที่ 4 เพื่อให้วันที่ชิดขวาที่ x = 190",
+    ],
+    concepts: ['doc.text()', 'x/y', 'align right', 'header zone'],
+    visualKind: 'xy-bars',
+    miniTask: 'เติมหัวเอกสารและวันที่ให้เอกสารเริ่มมี identity',
+    practice: {
+      prompt: 'ต่อจากบท 1 ให้เพิ่ม pageMargin/contentWidth แล้ววาง Project Brief กับวันที่บน header',
+      requirements: [
+        'กำหนด pageMargin = 20 และ contentWidth = 170',
+        "วาง 'Project Brief' ที่ x = 20, y = 24",
+        "วางวันที่ '2026-06-13' ที่ x = 190, y = 24 พร้อม align right",
+      ],
+    },
+    completionChecklist: [
+      { id: 'previous-stage', label: 'ฐานจากบท 1 ยังอยู่ครบ' },
+      { id: 'layout-vars', label: 'มี pageMargin และ contentWidth สำหรับ layout ของเอกสาร' },
+      { id: 'header-title', label: "วาง 'Project Brief' ที่ตำแหน่ง header ฝั่งซ้าย" },
+      { id: 'header-date', label: 'วางวันที่ที่ตำแหน่ง header ฝั่งขวา' },
+      { id: 'date-align-right', label: "ใช้ { align: 'right' } กับวันที่" },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+    ],
+    starterCode: stage1,
+    starterCodeVersion: projectBriefStarterVersion,
+    solutionCode: stage2,
+  },
+  {
+    id: 'line-rect',
+    order: 3,
+    phase: 'Document 1: Project Brief',
+    type: 'lesson',
+    title: 'Document Skeleton',
+    shortTitle: 'Skeleton',
+    goal: 'วาด divider และ card 3 ใบเพื่อสร้างโครงเอกสาร Project Brief',
+    explanation:
+      "บทนี้เปลี่ยนจากข้อความบนหน้าเปล่าให้เป็น layout จริง เอกสารหนึ่งใบต้องมีพื้นที่ชัดเจนก่อนใส่ข้อมูล: Info, Summary และ Milestones",
+    teachingPoints: [
+      'doc.line() ใช้ทำ divider ใต้ header',
+      'doc.rect(x, y, width, height) ใช้สร้างกรอบ card',
+      'ตำแหน่ง card ถูก fix ตาม blueprint เพื่อให้ผลลัพธ์มั่นคง',
+    ],
+    concepts: ['doc.line()', 'doc.rect()', 'card zone', 'blueprint'],
+    visualKind: 'box-model',
+    miniTask: 'เติมโครง card ให้เอกสารมีพื้นที่สำหรับข้อมูลจริง',
+    practice: {
+      prompt: 'ต่อจาก header ให้เพิ่ม divider และ card 3 ใบตาม blueprint',
+      requirements: [
+        'วาด divider จาก x 20 ถึง x 190 ที่ y 32',
+        'วาด Info card ที่ y 44',
+        'วาด Summary card ที่ y 106',
+        'วาด Milestones card ที่ y 178',
+      ],
+    },
+    completionChecklist: [
+      { id: 'previous-stage', label: 'ฐานจากบท 2 ยังอยู่ครบ' },
+      { id: 'header-divider', label: 'วาด divider ใต้ header ที่ y 32' },
+      { id: 'info-card', label: 'วาด Info card ตาม blueprint' },
+      { id: 'summary-card', label: 'วาด Summary card ตาม blueprint' },
+      { id: 'milestone-card', label: 'วาด Milestones card ตาม blueprint' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+    ],
+    starterCode: stage2,
+    starterCodeVersion: projectBriefStarterVersion,
+    solutionCode: stage3,
+  },
+  {
+    id: 'style',
+    order: 4,
+    phase: 'Document 1: Project Brief',
+    type: 'lesson',
+    title: 'Style Contract',
+    shortTitle: 'Style',
+    goal: 'ใส่ขนาดตัวอักษร สี เส้น และพื้น card ให้เอกสารอ่านเป็นระบบเดียวกัน',
+    explanation:
+      "style ใน jsPDF เป็น state ที่มีผลกับสิ่งที่วาดถัดไป บทนี้จึงใช้ setFontSize, setTextColor, setDrawColor และ setFillColor เพื่อทำให้ skeleton กลายเป็นเอกสารที่อ่านง่าย",
+    teachingPoints: [
+      'ตั้ง font size ก่อนวาง title, heading และ body',
+      'setTextColor ใช้กับข้อความถัดไป',
+      'setDrawColor ใช้กับเส้นและขอบ card',
+      "setFillColor ใช้กับพื้น card เมื่อ rect ใช้ style 'F' หรือ 'FD'",
+    ],
+    concepts: ['style state', 'font size', 'text color', 'card fill', 'card border'],
+    visualKind: 'text-style',
+    miniTask: 'เปลี่ยนโครงขาวดำให้เป็น document style contract',
+    practice: {
+      prompt: 'ต่อจาก skeleton ให้เติม style และข้อความตัวอย่างในแต่ละ card',
+      requirements: [
+        'title ใช้ font size 22',
+        'section heading ใช้ font size 18',
+        'body ใช้ font size 16',
+        'ใช้สี text, draw และ fill ตาม design contract',
+        "card ใช้ rect(..., 'FD') เพื่อมีทั้งพื้นและขอบ",
+      ],
+    },
+    completionChecklist: [
+      { id: 'previous-stage', label: 'ฐานจากบท 3 ยังอยู่ครบ' },
+      { id: 'title-style', label: 'ตั้ง title เป็น font size 22 และสีหลัก' },
+      { id: 'heading-style', label: 'ตั้ง section heading เป็น font size 18' },
+      { id: 'body-style', label: 'ตั้ง body text เป็น font size 16 และสีรอง' },
+      { id: 'card-style', label: 'ใช้สีขอบและสีพื้นกับ card ทั้งสามใบ' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+    ],
+    starterCode: stage3,
+    starterCodeVersion: projectBriefStarterVersion,
+    solutionCode: stage4,
+  },
+  {
+    id: 'image',
+    order: 5,
+    phase: 'Document 1: Project Brief',
+    type: 'lesson',
+    title: 'Project Image',
+    shortTitle: 'Image',
+    goal: 'วางภาพประกอบไว้ด้านขวาของ Info card ตาม blueprint',
+    explanation:
+      "เอกสารจริงมักมีภาพหรือโลโก้ บทนี้เพิ่ม imagePath, getLessonImage และ doc.addImage เข้าไปในเอกสารเดิม โดยตำแหน่งภาพต้องอยู่ในกรอบ Info card",
+    teachingPoints: [
+      "imagePath คือ path ของไฟล์ใน public เช่น '/images/lesson-image-sample.svg'",
+      'getLessonImage(imagePath) เตรียมข้อมูลรูปให้ jsPDF',
+      'doc.addImage(imageData, format, x, y, width, height) วางรูปลงตำแหน่งที่กำหนด',
+    ],
+    concepts: ['imagePath', 'getLessonImage()', 'doc.addImage()', 'image box'],
+    visualKind: 'image-ratio',
+    imagePaths,
+    miniTask: 'เติมภาพลง Info card โดยไม่ให้ชนข้อความฝั่งซ้าย',
+    practice: {
+      prompt: 'ต่อจากบท 4 ให้เพิ่มภาพใน Info card ที่ x 150, y 54, size 36 x 24 mm',
+      requirements: [
+        'มี imagePath ที่ชี้ไปยังรูปตัวอย่าง',
+        'ใช้ getLessonImage(imagePath)',
+        'ใช้ doc.addImage(...) วางภาพ',
+        'ภาพอยู่ด้านขวาของ Info card ตาม blueprint',
+      ],
+    },
+    completionChecklist: [
+      { id: 'previous-stage', label: 'ฐานจากบท 4 ยังอยู่ครบ' },
+      { id: 'image-path', label: 'มี imagePath สำหรับรูปตัวอย่าง' },
+      { id: 'image-data', label: 'เตรียม imageData ด้วย getLessonImage(imagePath)' },
+      { id: 'image-placement', label: 'วางภาพใน Info card ตาม blueprint' },
+      { id: 'image-size', label: 'กำหนดขนาดภาพ 36 x 24 mm' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+    ],
+    starterCode: stage4,
+    starterCodeVersion: projectBriefStarterVersion,
+    solutionCode: stage5,
+  },
+  {
+    id: 'thai-font',
+    order: 6,
+    phase: 'Document 1: Project Brief',
+    type: 'lesson',
+    title: 'Thai Font',
+    shortTitle: 'Thai Font',
+    goal: 'register และเลือกฟอนต์ไทยก่อนวางข้อความภาษาไทยในเอกสารเดียวกัน',
+    explanation:
+      "ถ้าเอกสารมีภาษาไทย ต้องบอก jsPDF ให้รู้จักฟอนต์ก่อนด้วย registerThaiFont(doc) แล้วเลือกฟอนต์ด้วย doc.setFont(...) ก่อนวางข้อความไทย",
+    teachingPoints: [
+      'register คือการเตรียมฟอนต์ให้ jsPDF รู้จัก',
+      'PDF_FONTS.thai เก็บ family/style ที่ helper เตรียมไว้',
+      'หลัง setFont แล้ว doc.text ภาษาไทยจะแสดงด้วย glyph ที่ถูกต้อง',
+    ],
+    concepts: ['registerThaiFont()', 'PDF_FONTS.thai', 'doc.setFont()', 'glyph ภาษาไทย'],
+    visualKind: 'font-register',
+    imagePaths,
+    miniTask: 'เปลี่ยนหัวข้อใน card เป็นภาษาไทยโดยยังคุม layout เดิม',
+    practice: {
+      prompt: 'ต่อจากบท 5 ให้ register ฟอนต์ไทย เลือกฟอนต์ และใช้ข้อความไทยในเอกสาร',
+      requirements: [
+        'เรียก registerThaiFont(doc)',
+        'ใช้ doc.setFont(PDF_FONTS.thai.family, PDF_FONTS.thai.style)',
+        'มีข้อความภาษาไทยใน doc.text()',
+        'ยังคงภาพและ card layout เดิมไว้',
+      ],
+    },
+    completionChecklist: [
+      { id: 'previous-stage', label: 'ฐานจากบท 5 ยังอยู่ครบ' },
+      { id: 'register-thai-font', label: 'เรียก registerThaiFont(doc)' },
+      { id: 'set-thai-font', label: 'เลือกฟอนต์ไทยด้วย doc.setFont(...)' },
+      { id: 'thai-heading', label: 'มีหัวข้อ section ภาษาไทยในเอกสาร' },
+      { id: 'thai-body', label: 'มีข้อความรายละเอียดภาษาไทยในเอกสาร' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+    ],
+    starterCode: stage5,
+    starterCodeVersion: projectBriefStarterVersion,
+    solutionCode: stage6,
+  },
+  {
+    id: 'data-mapping',
+    order: 7,
+    phase: 'Document 1: Project Brief',
+    type: 'lesson',
+    title: 'Data Mapping',
+    shortTitle: 'Data',
+    goal: 'เปลี่ยนข้อความคงที่ให้มาจาก project object และ project.milestones array',
+    explanation:
+      "เมื่อเอกสารเริ่มมีหน้าตาชัดแล้ว บทนี้เปลี่ยนเนื้อหาจากข้อความที่พิมพ์ตรง ๆ ให้มาจากข้อมูลจริง เพื่อให้เอกสารแก้ข้อมูลได้โดยไม่ต้องไล่แก้ทุก doc.text()",
+    teachingPoints: [
+      'project object เก็บข้อมูลหนึ่งเอกสาร เช่น name, date, owner, status, imagePath และ summary',
+      'project.milestones เป็น array สำหรับรายการหลายแถว',
+      'forEach/map ใช้ render rows และ index ใช้คำนวณตำแหน่ง y ของแต่ละแถว',
+    ],
+    concepts: ['project object', 'project.field', 'project.milestones', 'forEach()', 'index -> y'],
+    visualKind: 'data-mapping',
+    imagePaths,
+    miniTask: 'ให้เอกสารอ่านค่าจาก data object แทนข้อความคงที่',
+    practice: {
+      prompt: 'ต่อจากบท 6 ให้เพิ่ม project object แล้วนำ field กับ milestones ไปวางในเอกสาร',
+      requirements: [
+        'มี project object พร้อม field หลัก',
+        'ใช้ project.date, project.name, project.owner, project.status ใน doc.text()',
+        'ใช้ project.imagePath กับ getLessonImage(...)',
+        'วน project.milestones ด้วย forEach/map',
+        'ใช้ index คำนวณ rowY',
+      ],
+    },
+    completionChecklist: [
+      { id: 'previous-stage', label: 'ฐานจากบท 6 ยังอยู่ครบ' },
+      { id: 'project-object', label: 'สร้าง project object สำหรับข้อมูลเอกสาร' },
+      { id: 'project-fields', label: 'ใช้ project fields ใน doc.text() และ image' },
+      { id: 'milestones-array', label: 'มี project.milestones เป็น array' },
+      { id: 'milestones-loop', label: 'วน project.milestones ด้วย forEach() หรือ map()' },
+      { id: 'row-y-position', label: 'ใช้ index คำนวณตำแหน่ง y ของแต่ละ row' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+    ],
+    starterCode: stage6,
+    starterCodeVersion: projectBriefStarterVersion,
+    solutionCode: stage7,
+  },
+  {
+    id: 'text-wrap',
+    order: 8,
+    phase: 'Document 1: Project Brief',
+    type: 'lesson',
+    title: 'Summary Wrap',
+    shortTitle: 'Wrap',
+    goal: 'wrap project.summary ให้อยู่ใน Summary card โดยไม่ล้นออกนอก layout',
+    explanation:
+      "ข้อมูลจริงมักยาวกว่า placeholder บทนี้ใช้ doc.splitTextToSize(project.summary, summaryWidth) เพื่อแบ่งข้อความก่อนวางลง Summary card",
+    teachingPoints: [
+      'summaryWidth คือความกว้างสูงสุดของข้อความใน card',
+      'splitTextToSize คืน array ของบรรทัด',
+      'doc.text() รับ array และวางเป็นหลายบรรทัดได้',
+    ],
+    concepts: ['long text', 'summaryWidth', 'splitTextToSize()', 'wrappedSummary'],
+    visualKind: 'text-wrap',
+    imagePaths,
+    miniTask: 'ทำให้ summary ยาว ๆ อยู่ในกรอบเดียวกับ blueprint',
+    practice: {
+      prompt: 'ต่อจากบท 7 ให้ wrap project.summary ก่อนวางลง Summary card',
+      requirements: [
+        'summary ยาวพอให้ต้อง wrap',
+        'กำหนด summaryWidth จาก contentWidth',
+        'ใช้ doc.splitTextToSize(project.summary, summaryWidth)',
+        'ส่ง wrappedSummary เข้า doc.text()',
+      ],
+    },
+    completionChecklist: [
+      { id: 'previous-stage', label: 'ฐานจากบท 7 ยังอยู่ครบ' },
+      { id: 'long-summary', label: 'project.summary เป็นข้อความยาวของเอกสาร' },
+      { id: 'summary-width', label: 'กำหนด summaryWidth สำหรับ Summary card' },
+      { id: 'split-summary', label: 'ใช้ doc.splitTextToSize(project.summary, summaryWidth)' },
+      { id: 'wrapped-summary-text', label: 'ส่ง wrappedSummary เข้า doc.text() ใน Summary card' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+    ],
+    starterCode: stage7,
+    starterCodeVersion: projectBriefStarterVersion,
+    solutionCode: stage8,
+  },
+  {
+    id: 'one-page-layout',
+    order: 9,
+    phase: 'Document 1: Project Brief',
+    type: 'lesson',
+    title: 'Complete One-page Brief',
+    shortTitle: 'Complete',
+    goal: 'เติม footer และจัดทุก section ให้เป็น Project Brief หนึ่งหน้าที่ครบถ้วน',
+    explanation:
+      "บทนี้รวมทุกอย่างจากบทก่อนหน้าให้กลายเป็นเอกสารใช้งานได้จริง: header, info card, image, summary, milestones และ footer อยู่ครบตาม blueprint",
+    teachingPoints: [
+      'footer เป็นส่วนปิดท้ายเอกสารและช่วยให้หน้าอ่านจบชัด',
+      'ทุก section ใช้ margin/contentWidth เดียวกันเพื่อให้เอกสารนิ่ง',
+      'ผลลัพธ์ควรใกล้ blueprint มากกว่า code ต้องเหมือนตัวอย่างทุกบรรทัด',
+    ],
+    concepts: ['one-page layout', 'footerY', 'section stack', 'strict output'],
+    visualKind: 'layout',
+    imagePaths,
+    miniTask: 'ทำ Project Brief หนึ่งหน้าที่ครบก่อนเข้าสู่ checkpoint',
+    practice: {
+      prompt: 'ต่อจากบท 8 ให้เติม footer line และ footer text แล้วตรวจว่า section ทั้งหมดอยู่ครบ',
+      requirements: [
+        'มี header, divider, Info card, Summary card, Milestones card',
+        'มีภาพอยู่ใน Info card',
+        'มี wrapped summary อยู่ใน Summary card',
+        'มี milestones rows จาก data',
+        'มี footer line และ footer text ที่ y ใกล้ 278',
+      ],
+    },
+    completionChecklist: [
+      { id: 'previous-stage', label: 'ฐานจากบท 8 ยังอยู่ครบ' },
+      { id: 'section-stack', label: 'จัด Header / Info / Summary / Milestones ครบตาม blueprint' },
+      { id: 'image-in-info', label: 'ภาพยังอยู่ใน Info card ตามตำแหน่งเดิม' },
+      { id: 'wrapped-summary', label: 'Summary card ใช้ wrappedSummary' },
+      { id: 'milestone-rows', label: 'Milestones card แสดง rows จาก project.milestones' },
+      { id: 'footer', label: 'มี footer line และ footer text ใกล้ท้ายหน้า' },
+      { id: 'run-preview', label: 'กด Run แล้วสร้าง PDF preview สำเร็จ' },
+    ],
+    starterCode: stage8,
+    starterCodeVersion: projectBriefStarterVersion,
+    solutionCode: stage9,
   },
   {
     id: 'checkpoint-project-summary',
     order: 10,
-    phase: 'Phase 1: Basic API',
+    phase: 'Document 1: Project Brief',
     type: 'checkpoint',
-    title: 'Checkpoint 1: Build a Simple Project Summary PDF',
-    shortTitle: 'Checkpoint 1',
-    goal: 'สร้างเอกสารสรุปโปรเจกต์หน้าเดียวจาก blueprint โดยใช้พื้นฐานที่เรียนมา',
+    title: 'Checkpoint: Project Brief PDF',
+    shortTitle: 'Checkpoint',
+    goal: 'ตรวจเอกสาร Project Brief ทั้งใบให้ตรง blueprint: ผลลัพธ์ต้องนิ่ง แต่ code เขียนยืดหยุ่นได้',
     explanation:
-      'checkpoint นี้จะถูกซ่อนไว้จนกว่าบท 1-9 จะครบ เมื่อปลดล็อกแล้ว ให้ทำเอกสารหน้าเดียวจาก data object โดยอ้างอิง blueprint ที่คาดหวัง ไม่ต้องเหมือน pixel-perfect แต่ควรใช้ตัวแปรตำแหน่งที่โจทย์เตรียมไว้ เพราะตัวเลขเหล่านี้เป็นข้อตกลงของ layout: ช่วยให้ header, card, image และ footer อยู่ใน zone เดียวกับ blueprint และทำให้ระบบตรวจเข้าใจหลักฐานใน code ได้',
-    concepts: ['blueprint = ภาพเป้าหมาย', 'layout zone = ช่วงตำแหน่ง', 'project data', 'design contract', 'one-page document'],
+      'checkpoint นี้ตรวจเอกสารที่ประกอบมาตั้งแต่บท 1-9 ทั้งหน้า ระบบให้ความสำคัญกับผลลัพธ์ตาม blueprint เช่นตำแหน่ง card, image, summary และ footer มากกว่าการบังคับให้ code เหมือนตัวอย่างทุกบรรทัด',
+    concepts: ['strict output', 'flexible code', 'Project Brief blueprint', 'document contract'],
     visualKind: 'checkpoint',
-    imagePaths: ['/images/lesson-image-sample.svg'],
+    imagePaths,
     challenge: {
       prompt:
-        'สร้าง PDF สรุปโปรเจกต์แบบหน้าเดียวให้ใกล้เคียง Expected blueprint ด้านล่าง ทำ layout เองได้ แต่ตำแหน่งหลักต้องอิงจาก blueprint ไม่ใช่วางตรงไหนก็ได้',
+        'ทำ Project Brief ให้ตรง Expected blueprint ของเอกสารพื้นฐานใบแรก โดยใช้ code style ของตัวเองได้ แต่ผลลัพธ์ต้องอยู่ในตำแหน่งและขนาดตาม contract',
       requirements: [
-        "เริ่มด้วย const doc = new jsPDF({ unit: 'mm', format: 'a4' }) แล้วท้ายสุด return doc",
-        'สร้าง project data object ที่มี field ตามรายการ Required data fields',
-        'ตั้งฟอนต์ด้วย doc.setFont() ก่อนวางข้อความหลัก',
-        'วาง header ด้านบนตาม blueprint: title ฝั่งซ้าย, date ฝั่งขวา, divider ใต้หัวเอกสาร',
-        'ใช้ขนาดตัวอักษรตาม design contract: title 22, section heading 18, body 16',
-        'ใช้สีตาม design contract สำหรับข้อความ เส้น กรอบ และพื้นกล่อง',
-        'วางภาพจาก project.imagePath ไว้ด้านขวาของ Project Info card ตาม blueprint',
-        'มี Project Info card ที่ใช้ name, date, owner และ status ในช่วงบนของหน้า',
-        'มี Summary card ถัดลงมาที่ wrap ข้อความยาว',
-        'มี Status / Milestones card ถัดลงมาอย่างน้อยหนึ่งกล่อง',
-        'มี footer line และ footer text ใกล้ท้ายหน้า',
+        "ใช้ A4/mm และ return doc",
+        'ใช้ project object เป็นแหล่งข้อมูลหลัก',
+        'ใช้ฟอนต์ไทยกับข้อความไทย',
+        'วาง header, divider, Info, Summary, Milestones และ Footer ตาม blueprint',
+        'วางภาพจาก project.imagePath ใน Info card',
+        'wrap project.summary ก่อนวางใน Summary card',
       ],
-      blueprint: [
-        {
-          label: 'Header',
-          detail: 'Zone y 16-34: วาง Project Summary ที่ x ประมาณ 20, วาง project.date ด้านขวา, และตี divider ใต้หัวเอกสาร',
-        },
-        {
-          label: 'Info card',
-          detail: 'Zone y 40-94: วางกล่องกว้างเกือบเต็มหน้า ข้อมูล project อยู่ฝั่งซ้าย ภาพอยู่ฝั่งขวา',
-        },
-        {
-          label: 'Image',
-          detail: 'Target x 150-170, y 50-70, size ประมาณ 30 x 18 mm: ใช้ project.imagePath ผ่าน getLessonImage(project.imagePath) และ doc.addImage()',
-        },
-        {
-          label: 'Summary',
-          detail: 'Zone y 105-155: วาง project.summary ที่ผ่าน doc.splitTextToSize() ในกล่องอ่านง่าย',
-        },
-        {
-          label: 'Status / milestones',
-          detail: 'Zone y 175-225: วาง milestone/status rows จาก project.milestones ให้เป็นส่วนงานถัดลงมา',
-        },
-        {
-          label: 'Footer',
-          detail: 'Zone y 270-286: วาง footer line และ generated-by note ใกล้ท้ายหน้า',
-        },
-      ],
+      blueprint,
       layoutSketch: `┌──────────────────────────────────────────────┐
-│ Project Summary                    2026-06-11│
+│ Project Brief                      2026-06-13│
 │ ──────────────────────────────────────────── │
-│                                              │
 │ ┌──────────────────────────────────────────┐ │
-│ │ Project Info                 ┌─────────┐ │ │
-│ │ Name   : jsPDF Visual...     │ Image   │ │ │
-│ │ Owner  : Learning Team       │ visual  │ │ │
-│ │ Date   : 2026-06-11          └─────────┘ │ │
-│ │ Status : Ready for review                │ │
+│ │ ข้อมูลโปรเจกต์              ┌─────────┐ │ │
+│ │ ชื่อ / เจ้าของ / สถานะ      │ Image   │ │ │
 │ └──────────────────────────────────────────┘ │
-│                                              │
-│ Summary                                      │
 │ ┌──────────────────────────────────────────┐ │
-│ │ A visual-first playground for learning...│ │
-│ │ The final checkpoint should feel like... │ │
-│ │ clean one-page project summary...        │ │
+│ │ สรุปภาพรวม                              │ │
+│ │ wrapped project.summary                  │ │
 │ └──────────────────────────────────────────┘ │
-│                                              │
-│ Status / Milestones                          │
 │ ┌──────────────────────────────────────────┐ │
-│ │ Foundation : Page, position, shape...    │ │
-│ │ Content    : Image, font, data, wrap...  │ │
+│ │ หมุดหมายงาน                              │ │
+│ │ project.milestones rows                  │ │
 │ └──────────────────────────────────────────┘ │
-│                                              │
 │ ──────────────────────────────────────────── │
 │ Generated by jsPDF Visual Lesson Playground  │
 └──────────────────────────────────────────────┘`,
-      designContract: [
-        {
-          label: 'Font',
-          detail: 'ตั้งฟอนต์ให้ชัดด้วย doc.setFont() ก่อนเขียนข้อความหลัก ถ้ามีภาษาไทยให้ใช้ฟอนต์ที่มี glyph ภาษาไทย',
-        },
-        {
-          label: 'Title',
-          detail: 'ตัวอักษรหัวเรื่องใช้ doc.setFontSize(22) และสีหลัก #111827',
-        },
-        {
-          label: 'Section heading',
-          detail: 'หัวข้อ section ใช้ doc.setFontSize(18) และสีหลัก #111827',
-        },
-        {
-          label: 'Body',
-          detail: 'ข้อความเนื้อหาใช้ doc.setFontSize(16) และสีรอง #475569',
-        },
-        {
-          label: 'Accent line',
-          detail: 'เส้นเน้นใช้สีน้ำเงิน #2457d6 ด้วย doc.setDrawColor(36, 87, 214)',
-        },
-        {
-          label: 'Card border',
-          detail: 'ขอบกล่องใช้สี #cbd5e1 ด้วย doc.setDrawColor(203, 213, 225)',
-        },
-        {
-          label: 'Card fill',
-          detail: 'พื้นกล่องใช้สีอ่อน #f8fafc ด้วย doc.setFillColor(248, 250, 252)',
-        },
-      ],
+      designContract,
       dataFields: [
         'project.name',
         'project.date',
@@ -735,195 +910,103 @@ export const lessons = [
         'project.imagePath',
       ],
       checklist: [
-        'ตั้งฟอนต์ด้วย doc.setFont() ก่อนวางข้อความหลัก',
-        'วาง header ตาม Expected blueprint',
-        'ใช้ขนาดตัวอักษร title 22, section heading 18 และ body 16',
-        'ใช้สีตาม design contract',
-        'จัด Info / Summary / Status cards เป็นลำดับบน-กลาง-ล่างตาม blueprint',
-        'วางภาพจาก project.imagePath ใน Project Info card ตาม Expected blueprint',
-        'wrap summary ด้วย doc.splitTextToSize() ใน Summary card',
-        'ใช้ค่าจาก project data object ใน section ที่ตรงกับ blueprint',
-        'มี footer line และ footer text ใกล้ท้ายหน้า',
-        'กด Run แล้วเห็น PDF preview',
+        'หน้า A4/mm และ return doc สำเร็จ',
+        'header/date/divider ตรง blueprint',
+        'card stack ทั้งสามใบตรง blueprint',
+        'style contract ครบ',
+        'image อยู่ใน Info card',
+        'summary ถูก wrap',
+        'milestones มาจาก array',
+        'footer อยู่ท้ายหน้า',
       ],
     },
     completionChecklist: [
       {
-        id: 'project-object',
-        label: 'มี project data object สำหรับข้อมูลโจทย์',
+        id: 'final-page',
+        label: 'สร้างหน้า A4/mm และ return doc',
         hints: [
-          'เริ่มจากดู Required data fields ก่อน ข้อนี้ต้องมี object ชื่อ project',
-          'ประกาศ const project = { ... } ใน generate() แล้วเก็บข้อมูลทั้งหมดไว้ใน object นี้',
-          'ให้ project มี name, date, owner, status, imagePath, summary และ milestones ก่อนวาด PDF แล้วให้แต่ละ section อ่านค่าจาก project.<field>',
+          "เริ่มจากฐานบท 1: new jsPDF({ unit: 'mm', format: 'a4' })",
+          'ถ้า Run ไม่ผ่าน ให้เช็ก syntax และ return doc ก่อน',
+          'ท้าย function ต้อง return doc ที่สร้างจาก jsPDF',
         ],
       },
       {
-        id: 'font-family',
-        label: 'ตั้งฟอนต์ด้วย doc.setFont() ก่อนวางข้อความหลัก',
+        id: 'final-header',
+        label: 'Header และ divider ตรง blueprint',
         hints: [
-          'ดู Design contract ส่วน Font ก่อนเริ่มวางข้อความ',
-          'ตั้งฟอนต์ให้ชัดด้วย doc.setFont() ก่อนเขียน title หรือเนื้อหาหลัก ถ้ามีภาษาไทยควรใช้ฟอนต์ที่รองรับภาษาไทย',
-          'หลังสร้าง doc ให้เรียก doc.setFont(...) ไว้ช่วงต้น generate() ก่อน doc.setFontSize(...) และ doc.text(...) ชุดแรก',
+          'ดู Header ใน Expected blueprint',
+          'Project Brief ควรอยู่ x 20, y 24 และ date อยู่ x 190, y 24 แบบ align right',
+          'divider อยู่ y 32 จาก x 20 ถึง x 190',
         ],
       },
       {
-        id: 'blueprint-header',
-        label: 'วาง header และ divider ใน zone บนตาม Expected blueprint',
+        id: 'final-cards',
+        label: 'Info / Summary / Milestones cards ตรง blueprint',
         hints: [
-          'กลับไปดู Header ใน Expected blueprint',
-          'หัวเอกสารควรอยู่ช่วง y 16-34: title ซ้าย date ขวา และมีเส้นใต้',
-          "ทำ header เป็น 3 ชิ้น: doc.text('Project Summary', ฝั่งซ้ายบน), doc.text(project.date, ฝั่งขวาแถวเดียวกัน) แล้วค่อย doc.line(...) เป็นเส้นใต้หัวเอกสาร",
+          'ใช้ pageMargin 20 และ contentWidth 170 กับทุก card',
+          'Info y 44, Summary y 106, Milestones y 178',
+          "ใช้ doc.rect(..., 'FD') เพื่อให้ card มีพื้นและขอบ",
         ],
       },
       {
-        id: 'title-size',
-        label: 'ใช้ doc.setFontSize(22) สำหรับ title',
+        id: 'final-style',
+        label: 'ใช้ style contract ครบ',
         hints: [
-          'ดู Design contract ส่วน Title',
-          'ก่อนวาง title ให้ใช้ doc.setFontSize(22)',
-          "เรียงแบบนี้ในหัวเอกสาร: doc.setFontSize(22) ก่อน แล้วค่อย doc.text('Project Summary', ...)",
+          'ดู Design contract',
+          'title 22, heading 18, body 16 และใช้สีหลัก/รอง/ขอบ/พื้น',
+          'setTextColor, setDrawColor และ setFillColor ต้องถูกใช้ก่อนวาดส่วนที่เกี่ยวข้อง',
         ],
       },
       {
-        id: 'heading-size',
-        label: 'ใช้ doc.setFontSize(18) สำหรับ section heading',
+        id: 'final-image',
+        label: 'วางภาพใน Info card จาก project.imagePath',
         hints: [
-          'ดู Design contract ส่วน Section heading',
-          'ก่อนหัวข้อ section เช่น Project Info หรือ Summary ให้ใช้ doc.setFontSize(18)',
-          "ก่อนเขียนหัวข้อ card เช่น 'Project Info', 'Summary' หรือ 'Status' ให้เปลี่ยนเป็น doc.setFontSize(18)",
+          'ใช้ getLessonImage(project.imagePath)',
+          'วางภาพที่ x 150, y 54, size 36 x 24 mm',
+          "doc.addImage(imageData, 'PNG', imageX, imageY, imageWidth, imageHeight)",
         ],
       },
       {
-        id: 'body-size',
-        label: 'ใช้ doc.setFontSize(16) สำหรับ body text',
+        id: 'final-data',
+        label: 'ใช้ project data และ project.milestones',
         hints: [
-          'ดู Design contract ส่วน Body',
-          'ก่อนข้อความรายละเอียดใน card ให้ใช้ doc.setFontSize(16)',
-          'หลังวางหัวข้อ section แล้วให้เปลี่ยนเป็น doc.setFontSize(16) ก่อนเขียนรายละเอียดอย่าง owner, status, summary หรือ milestone',
+          'ข้อมูลหลักควรมาจาก project object',
+          'milestones ควรเป็น array และ render ด้วย forEach/map',
+          'ใช้ project.name/date/owner/status/summary/imagePath ในเอกสาร',
         ],
       },
       {
-        id: 'contract-colors',
-        label: 'ใช้สีตาม design contract สำหรับ text, line, border และ fill',
+        id: 'final-wrap',
+        label: 'wrap project.summary ใน Summary card',
         hints: [
-          'ดู Design contract สีหลัก',
-          'ใช้ text color, draw color และ fill color ให้ตรงกับ contract',
-          'แยกสีเป็น 4 งาน: setTextColor สำหรับตัวอักษร, setDrawColor(36, 87, 214) สำหรับเส้น accent, setDrawColor(203, 213, 225) สำหรับขอบ card และ setFillColor(248, 250, 252) สำหรับพื้น card',
+          'summary ยาวควรผ่าน splitTextToSize ก่อน',
+          'summaryWidth ควรอิงจาก contentWidth - 16',
+          'ส่ง wrappedSummary เข้า doc.text(...) ใน Summary card',
         ],
       },
       {
-        id: 'section-cards',
-        label: 'วาง Info / Summary / Status cards เป็น stack ตาม Expected blueprint',
+        id: 'final-footer',
+        label: 'Footer line และ footer text อยู่ท้ายหน้า',
         hints: [
-          'ดู stack ของ Info / Summary / Status ใน blueprint',
-          'สร้าง card ด้วย doc.rect() สามกล่องในช่วงบน กลาง และล่าง',
-          'วาง doc.rect(...) 3 ใบด้วย x และ width ชุดเดียวกัน: Info อยู่ช่วงบน, Summary อยู่กลาง, Status/Milestones อยู่ช่วงล่าง เพื่อให้เป็น stack เดียวกัน',
-        ],
-      },
-      {
-        id: 'divider-line',
-        label: 'ใช้ doc.line() เป็น divider หรือ footer line',
-        hints: [
-          'ดูเส้นใต้ header หรือ footer line ใน blueprint',
-          'ใช้ doc.line() สำหรับเส้นคั่น ไม่ใช่ rect อย่างเดียว',
-          'วาดเส้นด้วย doc.line(x1, y, x2, y): ใช้ได้ทั้งเส้นใต้ header หรือเส้นก่อน footer เลือกหนึ่งจุดที่ช่วยแบ่งเอกสารให้ชัด',
-        ],
-      },
-      {
-        id: 'image-evidence',
-        label: 'วางภาพจาก project.imagePath ด้านขวาของ Project Info card ตาม Expected blueprint',
-        hints: [
-          'ดูตำแหน่ง Image ใน Project Info card',
-          'ใช้ const imageData = getLessonImage(project.imagePath) แล้ววางภาพด้านขวาของ card',
-          "คิดเป็น 2 จังหวะ: เตรียม imageData จาก project.imagePath ก่อน แล้วใช้ doc.addImage(imageData, 'PNG', imageX, imageY, imageW, imageH) ให้อยู่ด้านขวาของ Info card",
-        ],
-      },
-      {
-        id: 'wrapped-summary',
-        label: 'ใช้ doc.splitTextToSize() เพื่อ wrap project.summary',
-        hints: [
-          'ดู Summary card ใน blueprint',
-          'อย่าส่ง summary ยาวเข้า doc.text() ตรง ๆ ให้ wrap ก่อน',
-          'ทำเป็น 2 บรรทัดความคิด: สร้าง wrappedSummary จาก doc.splitTextToSize(project.summary, summaryWidth) แล้วส่ง wrappedSummary เข้า doc.text(...) ใน Summary card',
-        ],
-      },
-      {
-        id: 'project-fields',
-        label: 'ใช้ name, date, owner, status, summary และ imagePath จาก project',
-        hints: [
-          'ดูรายการ Required data fields แล้วใช้ค่าจาก project ในแต่ละ section',
-          'หลังจากมีโครง section แล้ว ให้แทนข้อความตัวอย่างด้วย project.name, project.date, project.owner, project.status, project.summary และ project.imagePath',
-          'ไล่เช็กทีละ field: name/date/owner/status อยู่ใน Info card, summary อยู่ใน Summary card, imagePath ใช้กับ getLessonImage(...)',
-        ],
-      },
-      {
-        id: 'footer',
-        label: 'มี footer หรือ signature ใกล้ท้ายหน้า',
-        hints: [
-          'ดู Footer ใน Expected blueprint',
-          'วางเส้นหรือข้อความท้ายหน้าใกล้ y 270-286',
-          'กำหนด footerY ใกล้ท้ายหน้า เช่นช่วง 270-286 แล้วใช้ doc.line(...) เป็นเส้นก่อน footer และ doc.text(...) วาง signature ที่ footerY',
+          'footer line อยู่ประมาณ y 270',
+          'footer text อยู่ประมาณ y 278',
+          'ใช้ pageMargin และ contentWidth เดิมเพื่อให้เส้นตรงกับ layout หลัก',
         ],
       },
       {
         id: 'run-preview',
         label: 'กด Run แล้วสร้าง PDF preview สำเร็จ',
         hints: [
-          'ข้อนี้จะผ่านเมื่อ Run สำเร็จและมี PDF preview',
-          'ถ้ามี error ให้แก้ syntax หรือ return doc ก่อนดู checklist อื่น',
-          'เช็กโครงท้ายสุดให้ครบ: function generate() ปิดปีกกาถูก, สร้าง const doc = new jsPDF(...), วาดทุกอย่างลง doc แล้ว return doc',
+          'ข้อนี้ผ่านเมื่อ generate() return doc สำเร็จ',
+          'ถ้า error ให้ดู console ก่อน',
+          'Run สำเร็จแล้ว checklist อื่นจะเริ่มตรวจผลลัพธ์ตาม blueprint',
         ],
       },
     ],
-    starterCode: `function generate() {
-  const doc = new jsPDF(${pdfOptions});
-
-  const project = {
-    name: 'สนามเรียนรู้ jsPDF แบบเห็นภาพ',
-    date: '2026-06-11',
-    owner: 'ทีมเรียนรู้',
-    status: 'พร้อมตรวจทาน',
-    imagePath: '/images/lesson-image-sample.svg',
-    summary: 'พื้นที่ฝึก jsPDF แบบเห็นภาพที่ช่วยให้ผู้เรียนเข้าใจว่า code แต่ละบรรทัดส่งผลต่อ PDF อย่างไร checkpoint สุดท้ายควรรู้สึกเหมือนเอกสารสรุปโปรเจกต์หน้าเดียวที่อ่านง่ายและส่งต่อให้ทีมได้',
-    milestones: [
-      { label: 'พื้นฐาน', value: 'ผ่านบทเรื่องหน้าเอกสาร พิกัด รูปทรง และ style แล้ว' },
-      { label: 'เนื้อหา', value: 'ผ่านบทเรื่องภาพ ฟอนต์ ข้อมูล การ wrap และ layout แล้ว' },
-    ],
-  };
-
-  const imageData = getLessonImage(project.imagePath);
-
-  const pageMargin = 20;
-  const contentWidth = 170;
-  const headerY = 24;
-  const infoY = 40;
-  const summaryY = 106;
-  const statusY = 176;
-  const footerY = 282;
-  const imageX = 154;
-  const imageY = 54;
-  const imageWidth = 30;
-  const imageHeight = 18;
-
-  // Build a one-page project summary that follows the expected blueprint.
-  // Header: title at y 24, date on the right, divider around y 32.
-  // Info card: y 40-94, project data on the left, image on the right.
-  // Summary card: y 106-158. Status card: y 176-224. Footer: y 270-286.
-  // Use project fields, imageData, section boxes, wrapped summary text, styling, and a footer.
-
-  doc.text('Start your checkpoint layout here.', pageMargin, headerY);
-  doc.text(project.name, pageMargin, infoY + 12);
-  doc.text(project.imagePath, pageMargin, infoY + 26);
-
-  return doc;
-}
-`,
+    starterCode: stage9,
+    starterCodeVersion: projectBriefStarterVersion,
+    solutionCode: stage9,
   },
 ];
-
-lessons.forEach((lesson) => {
-  lesson.starterCodeVersion = blankStarterCodeVersion;
-  lesson.starterCode = blankStarterCode;
-});
 
 export const starterLesson = lessons[0];

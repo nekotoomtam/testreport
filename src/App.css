@@ -214,10 +214,53 @@ button {
   min-height: 38px;
 }
 
+.roadmapContent {
+  display: grid;
+  max-width: 1520px;
+  gap: 28px;
+}
+
+.referenceRoadmapSlot {
+  display: grid;
+  width: min(100%, 360px);
+}
+
+.documentRoadmapGroups,
+.documentRoadmapGroup {
+  display: grid;
+  min-width: 0;
+  gap: 18px;
+}
+
+.documentRoadmapBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1120px) minmax(280px, 360px);
+  align-items: start;
+  gap: 28px;
+}
+
+.documentRoadmapHeader {
+  display: grid;
+  max-width: 720px;
+  gap: 6px;
+  padding-top: 4px;
+  border-top: 1px solid #d8e1ec;
+}
+
+.documentRoadmapHeader h2 {
+  color: #111827;
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 1.08;
+}
+
+.documentRoadmapHeader p:last-child {
+  color: #475569;
+  line-height: 1.55;
+}
+
 .lessonRoadmap {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  max-width: 1120px;
   gap: 16px;
   padding-bottom: 4px;
   transition:
@@ -225,12 +268,71 @@ button {
     gap 420ms ease;
 }
 
+.documentOutputPreview {
+  position: sticky;
+  top: 32px;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  color: #172033;
+}
+
+.documentOutputPreviewHeader {
+  display: grid;
+  gap: 5px;
+}
+
+.documentOutputPreviewHeader h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.documentOutputPreviewHeader p:last-child {
+  color: #64748b;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.documentOutputPreview img {
+  display: block;
+  width: 100%;
+  max-height: calc(100dvh - 150px);
+  object-fit: contain;
+  object-position: top center;
+  background: #ffffff;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(31, 41, 55, 0.16);
+}
+
 .roadmapRail .lessonRoadmap {
   grid-template-columns: 1fr;
   gap: 10px;
 }
 
+.roadmapRail .documentRoadmapBody {
+  grid-template-columns: 1fr;
+}
+
+.roadmapRail .documentOutputPreview {
+  display: none;
+}
+
+.roadmapRail .roadmapContent,
+.roadmapRail .documentRoadmapGroups,
+.roadmapRail .documentRoadmapGroup {
+  gap: 10px;
+}
+
 .roadmapCompact .lessonRoadmap {
+  gap: 8px;
+}
+
+.roadmapCompact .roadmapContent,
+.roadmapCompact .documentRoadmapGroups,
+.roadmapCompact .documentRoadmapGroup {
   gap: 8px;
 }
 
@@ -278,6 +380,21 @@ button {
 .roadmapLesson.isCheckpoint.isSelected {
   background: #f8f0d8;
   border-color: #b98500;
+}
+
+.roadmapLesson.isLocked,
+.roadmapLesson.isLocked:hover {
+  color: #64748b;
+  background: #f8fafc;
+  border-color: #d6dee8;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.roadmapLesson.isLocked .lessonNumber {
+  color: #64748b;
+  background: #e5eaf0;
 }
 
 .roadmapRail .roadmapLesson {
@@ -372,6 +489,10 @@ button {
   font-weight: 800;
   line-height: 1.2;
   text-transform: uppercase;
+}
+
+.lessonProgressMeta.isLocked {
+  color: #64748b;
 }
 
 .roadmapCompact .lessonTitle {
@@ -1387,6 +1508,239 @@ button {
   background: #1d46ad;
 }
 
+.quickRefShell {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+}
+
+.quickRefToggle {
+  position: absolute;
+  top: 108px;
+  right: 18px;
+  display: grid;
+  min-width: 76px;
+  min-height: 42px;
+  gap: 1px;
+  place-items: center;
+  padding: 6px 12px;
+  color: #123a8a;
+  background: #ffffff;
+  border: 2px solid #2457d6;
+  border-left-width: 5px;
+  border-radius: 999px;
+  box-shadow:
+    0 16px 36px rgba(15, 23, 42, 0.18),
+    0 0 0 4px rgba(255, 255, 255, 0.84);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.quickRefToggle:hover,
+.quickRefToggle[aria-expanded="true"] {
+  color: #ffffff;
+  background: #2457d6;
+  box-shadow:
+    0 18px 42px rgba(36, 87, 214, 0.28),
+    0 0 0 4px rgba(255, 255, 255, 0.9);
+}
+
+.quickRefToggle span {
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.quickRefToggle small {
+  color: inherit;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0.78;
+}
+
+.quickRefDrawer {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  bottom: 24px;
+  display: grid;
+  width: min(380px, calc(100vw - 48px));
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px;
+  color: #172033;
+  background: #ffffff;
+  border: 1px solid #cbd7e5;
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+  opacity: 0;
+  pointer-events: auto;
+  transform: translateX(calc(100% + 40px));
+  transition:
+    opacity 220ms ease,
+    transform 260ms ease;
+}
+
+.quickRefShell.isOpen .quickRefDrawer {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.quickRefHeader,
+.quickRefModalHeader {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.quickRefHeader h3,
+.quickRefModalHeader h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.15rem;
+  line-height: 1.15;
+}
+
+.quickRefCloseButton {
+  display: grid;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.quickRefCloseButton:hover {
+  color: #111827;
+  background: #edf3ff;
+  border-color: #b8cbff;
+}
+
+.quickRefGroups {
+  display: grid;
+  gap: 14px;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+  scrollbar-color: #9aa9ba transparent;
+  scrollbar-width: thin;
+}
+
+.quickRefGroup {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e3e9f0;
+}
+
+.quickRefGroup:last-child {
+  border-bottom: 0;
+}
+
+.quickRefGroupHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.quickRefGroupHeader h4 {
+  margin: 0;
+  color: #111827;
+  font-size: 0.9rem;
+}
+
+.quickRefGroupHeader p {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.quickRefList {
+  display: grid;
+  gap: 7px;
+}
+
+.quickRefItem {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  color: #172033;
+  background: #fbfdff;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.quickRefItem:hover {
+  background: #edf3ff;
+  border-color: #9fb9ff;
+}
+
+.quickRefItem span {
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.quickRefItem code {
+  overflow: hidden;
+  color: #475569;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quickRefModalLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  pointer-events: auto;
+}
+
+.quickRefBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.28);
+  border: 0;
+  cursor: pointer;
+}
+
+.quickRefModal {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(860px, calc(100vw - 48px));
+  max-height: min(860px, calc(100dvh - 48px));
+  gap: 16px;
+  padding: 22px;
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid #cbd7e5;
+  border-radius: 8px;
+  box-shadow: 0 32px 100px rgba(15, 23, 42, 0.28);
+}
+
+.quickRefModal .conceptSurface {
+  min-height: 420px;
+  padding: 20px;
+}
+
+.quickRefModal .conceptDetailPanel {
+  background: #fbfdff;
+}
+
 @keyframes concept-move-text {
   0%,
   100% {
@@ -1460,6 +1814,10 @@ button {
     visibility 0s linear 420ms;
 }
 
+.workspaceShell.isLessonWorkspace {
+  grid-template-columns: minmax(520px, 11fr) minmax(420px, 9fr);
+}
+
 .appShell.isLessonMode .workspaceShell {
   visibility: visible;
   opacity: 1;
@@ -1492,6 +1850,12 @@ button {
   gap: 20px;
   overflow: hidden;
   background: #eef3f7;
+}
+
+.lessonPreviewPane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 16px;
 }
 
 .previewPane.conceptPane {
@@ -1566,6 +1930,10 @@ h2 {
   background: #fbfdff;
   border: 1px solid #d8e1ec;
   border-radius: 8px;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .targetCard {
@@ -1577,8 +1945,29 @@ h2 {
   border-left: 3px solid #2f7d4f;
 }
 
+.codeCard {
+  background: #fffdf8;
+  border-left: 3px solid #b45309;
+}
+
+.lessonCard.isCollapsed {
+  gap: 0;
+  min-height: 40px;
+  padding: 6px 10px;
+  background: #ffffff;
+}
+
 .lessonCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.lessonCardHeader > div {
   display: grid;
+  min-width: 0;
   gap: 4px;
 }
 
@@ -1587,6 +1976,75 @@ h2 {
   color: #111827;
   font-size: 1rem;
   line-height: 1.25;
+}
+
+.lessonCard.isCollapsed .lessonCardHeader h3 {
+  display: none;
+}
+
+.lessonCard.isCollapsed .lessonCardHeader > div {
+  display: block;
+}
+
+.lessonCard.isCollapsed .lessonCardHeader .eyebrow {
+  color: #172033;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.lessonCard.isCollapsed .lessonCardToggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+}
+
+.lessonCardBody {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.lessonCardToggle {
+  position: relative;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.lessonCardToggle:hover {
+  background: #f8fbff;
+  border-color: #8fb0ff;
+}
+
+.lessonCardToggle:focus-visible {
+  outline: 3px solid rgba(36, 87, 214, 0.22);
+  outline-offset: 2px;
+}
+
+.lessonCardToggle::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #334155;
+  border-bottom: 2px solid #334155;
+  content: "";
+  transform: translate(-50%, -62%) rotate(45deg);
+  transition: transform 180ms ease;
+}
+
+.lessonCardToggle[aria-expanded="false"]::before {
+  transform: translate(-50%, -42%) rotate(-135deg);
+}
+
+.lessonMutedText {
+  color: #64748b;
+  line-height: 1.55;
 }
 
 .lessonInfoBlock {
@@ -1991,10 +2449,22 @@ h2 {
   text-transform: uppercase;
 }
 
+.checklistGuideCopyHint {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
 .editorLabel {
   color: #334155;
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.editorFootnote {
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 .editorHeader {
@@ -2143,6 +2613,31 @@ h2 {
   background: #edf1f5;
 }
 
+.previewActionPanel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(31, 41, 55, 0.08);
+}
+
+.previewActionPanel .actionBar {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) repeat(2, minmax(92px, auto));
+  gap: 10px;
+}
+
+.previewActionPanel .actionBar button {
+  width: 100%;
+}
+
+.previewActionPanel .consolePanel {
+  max-height: min(22dvh, 150px);
+  overflow: auto;
+}
+
 .consolePanel {
   display: grid;
   gap: 6px;
@@ -2260,12 +2755,29 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .documentRoadmapBody {
+    grid-template-columns: 1fr;
+  }
+
+  .documentOutputPreview {
+    position: static;
+    max-width: 420px;
+  }
+
+  .documentOutputPreview img {
+    max-height: none;
+  }
+
   .conceptDetailPanel dl div {
     grid-template-columns: 1fr;
     gap: 4px;
   }
 
   .workspaceShell {
+    grid-template-columns: 1fr;
+  }
+
+  .workspaceShell.isLessonWorkspace {
     grid-template-columns: 1fr;
   }
 
@@ -2281,6 +2793,43 @@ h2 {
 
   .previewPlaceholder {
     min-height: 520px;
+  }
+
+  .previewActionPanel .actionBar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .previewActionPanel .actionBar button:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .quickRefToggle {
+    top: auto;
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .quickRefDrawer {
+    top: auto;
+    right: 12px;
+    bottom: 68px;
+    width: min(420px, calc(100vw - 24px));
+    max-height: min(70dvh, 620px);
+  }
+
+  .quickRefModalLayer {
+    padding: 14px;
+  }
+
+  .quickRefModal {
+    width: calc(100vw - 28px);
+    max-height: calc(100dvh - 28px);
+    padding: 16px;
+  }
+
+  .quickRefModal .conceptSurface {
+    min-height: 360px;
+    padding: 16px;
   }
 }
 
@@ -2353,5 +2902,24 @@ h2 {
     max-height: none;
     opacity: 1;
     transform: translateY(0);
+  }
+
+  .quickRefDrawer {
+    left: 12px;
+    width: auto;
+  }
+
+  .quickRefHeader h3,
+  .quickRefModalHeader h3 {
+    font-size: 1rem;
+  }
+
+  .quickRefModal .conceptSurface {
+    min-height: 320px;
+  }
+
+  .quickRefModal .conceptDetailPanel dl div {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }

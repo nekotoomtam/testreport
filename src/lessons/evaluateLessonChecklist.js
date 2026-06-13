@@ -30,6 +30,12 @@ function hasA3PageSize(doc) {
   );
 }
 
+function hasA4PortraitPage(doc) {
+  const { width, height } = getPageSize(doc);
+
+  return isNear(width, 210, 2) && isNear(height, 297, 2);
+}
+
 function hasLandscapePage(doc) {
   const { width, height } = getPageSize(doc);
 
@@ -276,6 +282,30 @@ function findTextCall(code, text) {
   };
 }
 
+function findTextCalls(code) {
+  const pattern = /doc\.text\(\s*([\s\S]*?)\s*,\s*([^,\n)]+)\s*,\s*([^,\n)]+)([^;]*?)\)/gi;
+  const textCalls = [];
+  let match = pattern.exec(code);
+
+  while (match) {
+    const x = resolveNumericArg(code, match[2]);
+    const y = resolveNumericArg(code, match[3]);
+
+    if (Number.isFinite(x) && Number.isFinite(y)) {
+      textCalls.push({
+        textSource: match[1].trim(),
+        x,
+        y,
+        optionsSource: match[4] ?? '',
+      });
+    }
+
+    match = pattern.exec(code);
+  }
+
+  return textCalls;
+}
+
 function findRectCall(code) {
   return findRectCalls(code)[0] ?? null;
 }
@@ -353,6 +383,10 @@ function hasFilledDrawnRect(code) {
   return pattern.test(code);
 }
 
+function countFilledDrawnRects(code) {
+  return code.match(/doc\.rect\(\s*[^,]+,\s*[^,]+,\s*[^,]+,\s*[^,]+,\s*(['"])(FD|DF)\1\s*\)/gi)?.length ?? 0;
+}
+
 function hasImagePathVariable(code) {
   return /\b(?:const|let|var)\s+imagePath\s*=\s*['"]\/images\/[^'"]+['"]/i.test(code);
 }
@@ -405,8 +439,75 @@ function countProjectPropertyUses(code) {
   return code.match(/project\.(name|date|owner|status|summary)/gi)?.length ?? 0;
 }
 
+function getProjectPropertyAliases(code) {
+  const aliases = new Set();
+  const directAliasPattern =
+    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*project\.(name|date|owner|status|summary)\b/gi;
+  let directAliasMatch = directAliasPattern.exec(code);
+
+  while (directAliasMatch) {
+    aliases.add(directAliasMatch[1]);
+    directAliasMatch = directAliasPattern.exec(code);
+  }
+
+  const destructuringPattern = /\b(?:const|let|var)\s*{\s*([^}]+)\s*}\s*=\s*project\b/gi;
+  let destructuringMatch = destructuringPattern.exec(code);
+
+  while (destructuringMatch) {
+    destructuringMatch[1]
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .forEach((part) => {
+        const [fieldName, aliasName] = part.split(':').map((value) => value.trim());
+
+        if (!/^(name|date|owner|status|summary)$/.test(fieldName)) {
+          return;
+        }
+
+        aliases.add(aliasName || fieldName);
+      });
+
+    destructuringMatch = destructuringPattern.exec(code);
+  }
+
+  return aliases;
+}
+
+function hasProjectPropertyInTextCall(code) {
+  const aliases = getProjectPropertyAliases(code);
+  const textCallPattern = /doc\.text\s*\(([\s\S]*?)\)\s*;?/gi;
+  let textCallMatch = textCallPattern.exec(code);
+
+  while (textCallMatch) {
+    const textCallSource = textCallMatch[1];
+
+    if (/project\.(name|date|owner|status|summary)\b/i.test(textCallSource)) {
+      return true;
+    }
+
+    if (
+      [...aliases].some((aliasName) =>
+        new RegExp(`\\b${aliasName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(
+          textCallSource,
+        ),
+      )
+    ) {
+      return true;
+    }
+
+    textCallMatch = textCallPattern.exec(code);
+  }
+
+  return false;
+}
+
 function hasProjectObject(code) {
   return /\b(?:const|let|var)\s+project\s*=\s*{/i.test(code);
+}
+
+function hasProjectMilestonesArray(code) {
+  return /milestones\s*:\s*\[/i.test(code) || /\b(?:const|let|var)\s+milestones\s*=\s*\[/i.test(code);
 }
 
 function usesRequiredProjectFields(code) {
@@ -420,7 +521,7 @@ function hasMilestonesArray(code) {
 }
 
 function hasMilestonesIteration(code) {
-  return /milestones\.(forEach|map)\s*\(/i.test(code);
+  return /(?:project\.)?milestones\.(forEach|map)\s*\(/i.test(code);
 }
 
 function hasRowYFromIndex(code) {
@@ -437,7 +538,7 @@ function hasLongProjectSummary(code) {
 }
 
 function hasSplitTextToSizeCall(code) {
-  return /doc\.splitTextToSize\(\s*project\.summary\s*,\s*maxWidth\s*\)/i.test(code);
+  return /doc\.splitTextToSize\(\s*project\.summary\s*,/i.test(code);
 }
 
 function hasProjectSummaryWrap(code) {
@@ -570,6 +671,185 @@ function hasCheckpointSectionStack(code) {
   return hasInfoCard && hasSummaryCard && hasStatusCard;
 }
 
+function hasReturnDoc(code) {
+  return /return\s+doc\s*;?/.test(code);
+}
+
+function hasLayoutVariables(code) {
+  return isNear(resolveNumericArg(code, 'pageMargin'), 20, 0.25) &&
+    isNear(resolveNumericArg(code, 'contentWidth'), 170, 0.25);
+}
+
+function hasTextAt(code, text, expectedX, expectedY, tolerance = 1.5) {
+  const textCall = findTextCall(code, text);
+
+  return Boolean(
+    textCall &&
+      isNear(textCall.x, expectedX, tolerance) &&
+      isNear(textCall.y, expectedY, tolerance),
+  );
+}
+
+function hasRightAlignedDateAtHeader(code) {
+  return findTextCalls(code).some(
+    (textCall) =>
+      isNear(textCall.x, 190, 1.5) &&
+      isNear(textCall.y, 24, 1.5) &&
+      /align\s*:\s*['"]right['"]/i.test(textCall.optionsSource) &&
+      (/2026-06-13/.test(textCall.textSource) || /project\.date\b/.test(textCall.textSource)),
+  );
+}
+
+function hasLineSegment(code, expectedX1, expectedY, expectedX2, tolerance = 1.5) {
+  return findLineCalls(code).some(
+    (lineCall) =>
+      isNear(lineCall.x1, expectedX1, tolerance) &&
+      isNear(lineCall.x2, expectedX2, tolerance) &&
+      isNear(lineCall.y1, expectedY, tolerance) &&
+      isNear(lineCall.y2, expectedY, tolerance),
+  );
+}
+
+function hasRectAt(code, expectedX, expectedY, expectedWidth, expectedHeight, tolerance = 1.5) {
+  return findRectCalls(code).some(
+    (rectCall) =>
+      isNear(rectCall.x, expectedX, tolerance) &&
+      isNear(rectCall.y, expectedY, tolerance) &&
+      isNear(rectCall.width, expectedWidth, tolerance) &&
+      isNear(rectCall.height, expectedHeight, tolerance),
+  );
+}
+
+function hasProjectBriefHeader(code) {
+  return hasTextAt(code, 'Project Brief', 20, 24) && hasRightAlignedDateAtHeader(code);
+}
+
+function hasProjectBriefCards(code) {
+  return (
+    hasRectAt(code, 20, 44, 170, 44) &&
+    hasRectAt(code, 20, 106, 170, 56) &&
+    hasRectAt(code, 20, 178, 170, 48)
+  );
+}
+
+function hasProjectBriefImage(code, requireProjectImagePath = false) {
+  const addImageCall = findAddImageCall(code);
+
+  return Boolean(
+    addImageCall &&
+      (!requireProjectImagePath || (hasProjectImagePath(code) && hasGetProjectImageCall(code))) &&
+      isNear(addImageCall.x, 150, 1.5) &&
+      isNear(addImageCall.y, 54, 1.5) &&
+      isNear(addImageCall.width, 36, 1.5) &&
+      isNear(addImageCall.height, 24, 1.5),
+  );
+}
+
+function hasProjectBriefStyle(code) {
+  return (
+    hasSetFontSize(code, 22) &&
+    hasSetFontSize(code, 18) &&
+    hasSetFontSize(code, 16) &&
+    (hasRgbColorCall(code, 'setTextColor', 17, 24, 39) ||
+      hasRgbColorCall(code, 'setTextColor', 71, 85, 105)) &&
+    hasRgbColorCall(code, 'setDrawColor', 203, 213, 225) &&
+    hasRgbColorCall(code, 'setFillColor', 248, 250, 252) &&
+    countFilledDrawnRects(code) >= 3
+  );
+}
+
+function hasWrappedSummaryInCard(code) {
+  const wrappedTextCall = findTextCalls(code).find((textCall) =>
+    /\bwrappedSummary\b/.test(textCall.textSource),
+  );
+
+  return Boolean(
+    hasProjectSummaryWrap(code) &&
+      wrappedTextCall &&
+      isInRange(wrappedTextCall.x, 26, 32) &&
+      isInRange(wrappedTextCall.y, 132, 140),
+  );
+}
+
+function hasMilestoneRowsInCard(code) {
+  return (
+    hasProjectMilestonesArray(code) &&
+    hasMilestonesIteration(code) &&
+    /(?:const|let|var)\s+rowY\s*=[^;]*index\s*\*/i.test(code)
+  );
+}
+
+function hasProjectBriefFooter(code) {
+  return hasLineSegment(code, 20, 270, 190, 2) && hasFooterNearPageBottom(code);
+}
+
+function hasImageAssetFlow(code) {
+  return (
+    (hasImagePathVariable(code) && hasGetLessonImageCall(code)) ||
+    (hasProjectImagePath(code) && hasGetProjectImageCall(code))
+  );
+}
+
+function hasStage1Base(code, doc) {
+  return (
+    hasOption(code, 'unit', 'mm') &&
+    (hasOption(code, 'format', 'a4') || hasA4PortraitPage(doc)) &&
+    hasReturnDoc(code)
+  );
+}
+
+function hasStage2Header(code, doc) {
+  return hasStage1Base(code, doc) && hasLayoutVariables(code) && hasProjectBriefHeader(code);
+}
+
+function hasStage3Skeleton(code, doc) {
+  return (
+    hasStage2Header(code, doc) &&
+    hasLineSegment(code, 20, 32, 190) &&
+    hasProjectBriefCards(code)
+  );
+}
+
+function hasStage4StyleContract(code, doc) {
+  return hasStage3Skeleton(code, doc) && hasProjectBriefStyle(code);
+}
+
+function hasStage5Image(code, doc) {
+  return hasStage4StyleContract(code, doc) && hasImageAssetFlow(code) && hasProjectBriefImage(code);
+}
+
+function hasStage6ThaiFont(code, doc) {
+  return (
+    hasStage5Image(code, doc) &&
+    /registerThaiFont\(\s*doc\s*\)/i.test(code) &&
+    hasThaiFontSetCall(code) &&
+    hasThaiText(code) &&
+    hasThaiTextCall(code)
+  );
+}
+
+function hasStage7DataMapping(code, doc) {
+  return (
+    hasStage6ThaiFont(code, doc) &&
+    hasProjectObject(code) &&
+    usesRequiredProjectFields(code) &&
+    hasProjectPropertyInTextCall(code) &&
+    hasProjectMilestonesArray(code) &&
+    hasMilestonesIteration(code) &&
+    hasRowYFromIndex(code)
+  );
+}
+
+function hasStage8SummaryWrap(code, doc) {
+  return (
+    hasStage7DataMapping(code, doc) &&
+    hasLongProjectSummary(code) &&
+    isNear(resolveNumericArg(code, 'summaryWidth'), 154, 0.25) &&
+    hasSplitTextToSizeCall(code) &&
+    hasWrappedSummaryInCard(code)
+  );
+}
+
 function hasAlignOption(textCall, alignValue) {
   if (!textCall) {
     return false;
@@ -613,153 +893,100 @@ function getRectCorners(rectCall) {
 
 const lessonCheckers = {
   'hello-pdf': {
-    'unit-mm': ({ code }) => hasOption(code, 'unit', 'mm'),
-    'format-a3': ({ code, doc }) => hasOption(code, 'format', 'a3') || hasA3PageSize(doc),
-    'orientation-landscape': ({ code, doc }) =>
-      hasOption(code, 'orientation', 'landscape') || hasLandscapePage(doc),
+    'page-a4-mm': ({ code, doc }) =>
+      hasOption(code, 'unit', 'mm') && (hasOption(code, 'format', 'a4') || hasA4PortraitPage(doc)),
+    'return-doc': ({ code }) => hasReturnDoc(code),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
   'xy-position': {
-    'left-text': ({ code }) => {
-      const textCall = findTextCall(code, 'Left');
-
-      return Boolean(textCall && isInRange(textCall.x, 15, 35));
-    },
-    'center-text': ({ code }) => {
-      const textCall = findTextCall(code, 'Center');
-
-      return Boolean(textCall && isInRange(textCall.x, 95, 115));
-    },
-    'center-align': ({ code }) => hasAlignOption(findTextCall(code, 'Center'), 'center'),
-    'right-text': ({ code }) => {
-      const textCall = findTextCall(code, 'Right');
-
-      return Boolean(textCall && isInRange(textCall.x, 175, 200));
-    },
-    'right-align': ({ code }) => hasAlignOption(findTextCall(code, 'Right'), 'right'),
+    'previous-stage': ({ code, doc }) => hasStage1Base(code, doc),
+    'layout-vars': ({ code }) => hasLayoutVariables(code),
+    'header-title': ({ code }) => hasTextAt(code, 'Project Brief', 20, 24),
+    'header-date': ({ code }) => hasRightAlignedDateAtHeader(code),
+    'date-align-right': ({ code }) => hasRightAlignedDateAtHeader(code),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
   'line-rect': {
-    'rect-call': ({ code }) => Boolean(findRectCall(code)),
-    'center-rect': ({ code }) => {
-      const rectCall = findRectCall(code);
-
-      if (!rectCall) {
-        return false;
-      }
-
-      const centerX = rectCall.x + rectCall.width / 2;
-
-      return (
-        isNear(centerX, 105, 8) &&
-        isInRange(rectCall.y, 65, 105) &&
-        isInRange(rectCall.width, 75, 105) &&
-        isInRange(rectCall.height, 45, 75)
-      );
-    },
-    'diagonal-down-line': ({ code }) => {
-      const corners = getRectCorners(findRectCall(code));
-
-      if (!corners) {
-        return false;
-      }
-
-      return findLineCalls(code).some((lineCall) =>
-        lineMatchesSegment(lineCall, corners.topLeft, corners.bottomRight),
-      );
-    },
-    'diagonal-up-line': ({ code }) => {
-      const corners = getRectCorners(findRectCall(code));
-
-      if (!corners) {
-        return false;
-      }
-
-      return findLineCalls(code).some((lineCall) =>
-        lineMatchesSegment(lineCall, corners.topRight, corners.bottomLeft),
-      );
-    },
-    'two-lines': ({ code }) => findLineCalls(code).length >= 2,
+    'previous-stage': ({ code, doc }) => hasStage2Header(code, doc),
+    'header-divider': ({ code }) => hasLineSegment(code, 20, 32, 190),
+    'info-card': ({ code }) => hasRectAt(code, 20, 44, 170, 44),
+    'summary-card': ({ code }) => hasRectAt(code, 20, 106, 170, 56),
+    'milestone-card': ({ code }) => hasRectAt(code, 20, 178, 170, 48),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
   style: {
-    'card-variables': ({ code }) =>
-      ['cardX', 'cardY', 'cardWidth', 'cardHeight'].every((variableName) =>
-        hasNamedConst(code, variableName),
-      ),
-    'font-size': ({ code }) => countDocCalls(code, 'setFontSize') >= 2,
-    'text-color': ({ code }) => hasDocCall(code, 'setTextColor'),
-    'fill-color': ({ code }) => hasDocCall(code, 'setFillColor'),
-    'draw-color': ({ code }) => hasDocCall(code, 'setDrawColor'),
-    'rect-fd': ({ code }) => hasFilledDrawnRect(code),
-    'divider-line': ({ code }) => hasDocCall(code, 'line'),
+    'previous-stage': ({ code, doc }) => hasStage3Skeleton(code, doc),
+    'title-style': ({ code }) =>
+      hasSetFontSize(code, 22) && hasRgbColorCall(code, 'setTextColor', 17, 24, 39),
+    'heading-style': ({ code }) => hasSetFontSize(code, 18),
+    'body-style': ({ code }) =>
+      hasSetFontSize(code, 16) && hasRgbColorCall(code, 'setTextColor', 71, 85, 105),
+    'card-style': ({ code }) =>
+      hasRgbColorCall(code, 'setDrawColor', 203, 213, 225) &&
+      hasRgbColorCall(code, 'setFillColor', 248, 250, 252) &&
+      countFilledDrawnRects(code) >= 3,
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
   image: {
+    'previous-stage': ({ code, doc }) => hasStage4StyleContract(code, doc),
     'image-path': ({ code }) => hasImagePathVariable(code),
-    'get-lesson-image': ({ code }) => hasGetLessonImageCall(code),
-    'add-image': ({ code }) => hasDocCall(code, 'addImage'),
-    'image-size': ({ code }) => {
-      const addImageCall = findAddImageCall(code);
-
-      return Boolean(
-        addImageCall &&
-          isInRange(addImageCall.width, 40, 180) &&
-          isInRange(addImageCall.height, 24, 120),
-      );
-    },
+    'image-data': ({ code }) => hasGetLessonImageCall(code),
+    'image-placement': ({ code }) => hasProjectBriefImage(code),
+    'image-size': ({ code }) => hasProjectBriefImage(code),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
   'thai-font': {
+    'previous-stage': ({ code, doc }) => hasStage5Image(code, doc),
     'register-thai-font': ({ code }) => /registerThaiFont\(\s*doc\s*\)/i.test(code),
-    'use-font-metadata': ({ code }) => /PDF_FONTS\.thai/i.test(code),
     'set-thai-font': ({ code }) => hasThaiFontSetCall(code),
-    'thai-text': ({ code }) => hasThaiText(code) && hasThaiTextCall(code),
-    'normal-style': ({ code }) =>
-      /PDF_FONTS\.thai\.style/i.test(code) || /['"]normal['"]/i.test(code),
+    'thai-heading': ({ code }) => /doc\.text\(\s*(['"`])(?:ข้อมูลโปรเจกต์|สรุปภาพรวม|หมุดหมายงาน)\1\s*,/i.test(code),
+    'thai-body': ({ code }) => hasThaiText(code) && hasThaiTextCall(code),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
   'data-mapping': {
-    'data-object': ({ code }) => hasProjectObject(code),
-    'data-array': ({ code }) => hasMilestonesArray(code),
-    'property-values': ({ code }) => countProjectPropertyUses(code) >= 3,
-    'array-iteration': ({ code }) => hasMilestonesIteration(code),
+    'previous-stage': ({ code, doc }) => hasStage6ThaiFont(code, doc),
+    'project-object': ({ code }) => hasProjectObject(code),
+    'project-fields': ({ code }) =>
+      usesRequiredProjectFields(code) && hasProjectPropertyInTextCall(code),
+    'milestones-array': ({ code }) => hasProjectMilestonesArray(code),
+    'milestones-loop': ({ code }) => hasMilestonesIteration(code),
     'row-y-position': ({ code }) => hasRowYFromIndex(code),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
   'text-wrap': {
+    'previous-stage': ({ code, doc }) => hasStage7DataMapping(code, doc),
     'long-summary': ({ code }) => hasProjectObject(code) && hasLongProjectSummary(code),
-    'max-width': ({ code }) => /\b(?:const|let|var)\s+maxWidth\s*=/i.test(code),
-    'split-text': ({ code }) => hasSplitTextToSizeCall(code),
-    'wrapped-variable': ({ code }) =>
-      /\b(?:const|let|var)\s+wrappedSummary\s*=\s*doc\.splitTextToSize\(/i.test(code),
-    'text-wrapped-lines': ({ code }) => /doc\.text\(\s*wrappedSummary\s*,/i.test(code),
+    'summary-width': ({ code }) => isNear(resolveNumericArg(code, 'summaryWidth'), 154, 0.25),
+    'split-summary': ({ code }) => hasSplitTextToSizeCall(code),
+    'wrapped-summary-text': ({ code }) => hasWrappedSummaryInCard(code),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
   'one-page-layout': {
-    'page-margin': ({ code }) => /\b(?:const|let|var)\s+pageMargin\s*=/i.test(code),
-    'content-width': ({ code }) => /\b(?:const|let|var)\s+contentWidth\s*=/i.test(code),
-    'section-boxes': ({ code }) => countDocCalls(code, 'rect') >= 2,
-    'divider-line': ({ code }) => hasDocCall(code, 'line'),
-    'wrapped-summary': ({ code }) => hasProjectSummaryWrap(code),
-    'project-data': ({ code }) => hasProjectObject(code) && countProjectPropertyUses(code) >= 3,
-    footer: ({ code }) => hasFooterNearPageBottom(code),
+    'previous-stage': ({ code, doc }) => hasStage8SummaryWrap(code, doc),
+    'section-stack': ({ code }) =>
+      hasProjectBriefHeader(code) &&
+      hasLineSegment(code, 20, 32, 190) &&
+      hasProjectBriefCards(code),
+    'image-in-info': ({ code }) => hasProjectBriefImage(code, true),
+    'wrapped-summary': ({ code }) => hasWrappedSummaryInCard(code),
+    'milestone-rows': ({ code }) => hasMilestoneRowsInCard(code),
+    footer: ({ code }) => hasProjectBriefFooter(code),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
   'checkpoint-project-summary': {
-    'project-object': ({ code }) => hasProjectObject(code),
-    'font-family': ({ code }) => hasDocCall(code, 'setFont'),
-    'blueprint-header': ({ code }) => hasCheckpointHeaderBlueprint(code),
-    'title-size': ({ code }) => hasSetFontSize(code, 22),
-    'heading-size': ({ code }) => hasSetFontSize(code, 18),
-    'body-size': ({ code }) => hasSetFontSize(code, 16),
-    'contract-colors': ({ code }) => hasCheckpointContractColors(code),
-    'section-cards': ({ code }) => hasCheckpointSectionStack(code),
-    'divider-line': ({ code }) => hasDocCall(code, 'line'),
-    'image-evidence': ({ code }) => hasCheckpointImageInBlueprintZone(code),
-    'wrapped-summary': ({ code }) => hasProjectSummaryWrap(code),
-    'project-fields': ({ code }) => usesRequiredProjectFields(code),
-    footer: ({ code }) => hasFooterNearPageBottom(code),
+    'final-page': ({ code, doc }) =>
+      hasOption(code, 'unit', 'mm') && (hasOption(code, 'format', 'a4') || hasA4PortraitPage(doc)) && hasReturnDoc(code),
+    'final-header': ({ code }) => hasProjectBriefHeader(code) && hasLineSegment(code, 20, 32, 190),
+    'final-cards': ({ code }) => hasProjectBriefCards(code),
+    'final-style': ({ code }) => hasProjectBriefStyle(code),
+    'final-image': ({ code }) => hasProjectBriefImage(code, true),
+    'final-data': ({ code }) =>
+      hasProjectObject(code) &&
+      usesRequiredProjectFields(code) &&
+      hasProjectMilestonesArray(code) &&
+      hasMilestonesIteration(code),
+    'final-wrap': ({ code }) => hasWrappedSummaryInCard(code),
+    'final-footer': ({ code }) => hasProjectBriefFooter(code),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
 };

@@ -3,6 +3,7 @@ import CodeEditor from './components/CodeEditor.jsx';
 import ConsolePanel from './components/ConsolePanel.jsx';
 import LessonRoadmap from './components/LessonRoadmap.jsx';
 import PdfPreview from './components/PdfPreview.jsx';
+import QuickReference from './components/QuickReference.jsx';
 import ReferenceWorkspace from './components/ReferenceWorkspace.jsx';
 import { lessons } from './lessons/basicLessons.js';
 import { getChecklistGuide } from './lessons/checklistGuides.js';
@@ -168,15 +169,67 @@ function getActiveCheckpointHintIds(lesson, checklistItems, checklistResult) {
     .map((item) => item.id);
 }
 
+function getPreviousLesson(lesson) {
+  const lessonIndex = lessons.findIndex((currentLesson) => currentLesson.id === lesson.id);
+
+  return lessonIndex > 0 ? lessons[lessonIndex - 1] : null;
+}
+
+function getCompletedLessonCode(lesson, lessonWorkById) {
+  const lessonWork = lessonWorkById[lesson.id];
+  const baseCode = getLessonBaseCode(lesson, lessonWorkById);
+  const previousLesson = getPreviousLesson(lesson);
+
+  if (
+    !isLessonWorkCurrent(lesson, lessonWork) ||
+    typeof lessonWork.code !== 'string' ||
+    (previousLesson && lessonWork.baseCode !== baseCode) ||
+    lessonWork.checklistEvaluatedCode !== lessonWork.code
+  ) {
+    return null;
+  }
+
+  const checklistResult = isRecord(lessonWork.checklistResult) ? lessonWork.checklistResult : {};
+
+  return isLessonChecklistComplete(lesson, checklistResult) ? lessonWork.code : null;
+}
+
+function getLessonBaseCode(lesson, lessonWorkById) {
+  const previousLesson = getPreviousLesson(lesson);
+  const previousLessonCode = previousLesson
+    ? getCompletedLessonCode(previousLesson, lessonWorkById)
+    : null;
+
+  return previousLessonCode ?? lesson.starterCode;
+}
+
 function getLessonDraftCode(lesson, lessonWorkById) {
   const lessonWork = lessonWorkById[lesson.id];
   const draftCode = lessonWork?.code;
+  const baseCode = getLessonBaseCode(lesson, lessonWorkById);
+  const previousLesson = getPreviousLesson(lesson);
 
   if (!isLessonWorkCurrent(lesson, lessonWork)) {
-    return lesson.starterCode;
+    return baseCode;
   }
 
-  return typeof draftCode === 'string' ? draftCode : lesson.starterCode;
+  if (previousLesson && lessonWork.baseCode !== baseCode) {
+    return baseCode;
+  }
+
+  return typeof draftCode === 'string' ? draftCode : baseCode;
+}
+
+function isLessonUnlocked(lesson, lessonCompletionById) {
+  const lessonIndex = lessons.findIndex((currentLesson) => currentLesson.id === lesson.id);
+
+  if (lessonIndex <= 0) {
+    return true;
+  }
+
+  return lessons
+    .slice(0, lessonIndex)
+    .every((previousLesson) => Boolean(lessonCompletionById[previousLesson.id]));
 }
 
 function getEffectiveChecklistResult(lesson, lessonWorkById, currentCode) {
@@ -216,6 +269,7 @@ function createLessonWorkMap(entries) {
       [entry.lessonId]: {
         lessonId: entry.lessonId,
         code: typeof entry.code === 'string' ? entry.code : '',
+        baseCode: typeof entry.baseCode === 'string' ? entry.baseCode : null,
         checklistResult: isRecord(entry.checklistResult) ? entry.checklistResult : {},
         checklistEvaluatedCode:
           typeof entry.checklistEvaluatedCode === 'string'
@@ -237,6 +291,7 @@ function App() {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [lastDoc, setLastDoc] = useState(null);
   const [isEditorExpanded, setIsEditorExpanded] = useState(false);
+  const [collapsedLessonCards, setCollapsedLessonCards] = useState({});
   const [lessonProgress, setLessonProgress] = useState(() => readStoredProgress());
   const [lessonWorkById, setLessonWorkById] = useState({});
   const [isLessonWorkLoaded, setIsLessonWorkLoaded] = useState(false);
@@ -333,6 +388,18 @@ function App() {
       return;
     }
 
+    if (!lessonUnlockById[nextLesson.id]) {
+      const previousLesson = getPreviousLesson(nextLesson);
+
+      setConsoleEntry({
+        type: 'info',
+        message: previousLesson
+          ? `Complete lesson ${previousLesson.order} before opening lesson ${nextLesson.order}.`
+          : 'This lesson is still locked.',
+      });
+      return;
+    }
+
     clearGeneratedPreview();
     setSelectedLessonId(nextLesson.id);
     setCode(getLessonDraftCode(nextLesson, lessonWorkById));
@@ -358,15 +425,17 @@ function App() {
   }
 
   function handleResetLesson() {
+    const baseCode = getLessonBaseCode(selectedLesson, lessonWorkById);
     const resetLessonWork = {
       lessonId: selectedLesson.id,
-      code: selectedLesson.starterCode,
+      code: baseCode,
+      baseCode,
       checklistResult: {},
       checklistEvaluatedCode: null,
       starterCodeVersion: selectedLesson.starterCodeVersion ?? null,
     };
 
-    setCode(selectedLesson.starterCode);
+    setCode(baseCode);
     persistLessonWork(resetLessonWork);
     setActiveHintItemIds([]);
     setOpenChecklistGuideById({});
@@ -374,10 +443,15 @@ function App() {
 
   function handleCodeChange(nextCode) {
     const previousLessonWork = lessonWorkById[selectedLesson.id] ?? {};
-    const shouldPreserveChecklist = isLessonWorkCurrent(selectedLesson, previousLessonWork);
+    const baseCode = getLessonBaseCode(selectedLesson, lessonWorkById);
+    const previousLesson = getPreviousLesson(selectedLesson);
+    const shouldPreserveChecklist =
+      isLessonWorkCurrent(selectedLesson, previousLessonWork) &&
+      (!previousLesson || previousLessonWork.baseCode === baseCode);
     const nextLessonWork = {
       lessonId: selectedLesson.id,
       code: nextCode,
+      baseCode,
       checklistResult: shouldPreserveChecklist && isRecord(previousLessonWork.checklistResult)
         ? previousLessonWork.checklistResult
         : {},
@@ -402,6 +476,19 @@ function App() {
     }));
   }
 
+  function handleToggleLessonCard(cardId) {
+    const shouldCollapseExpandedEditor = cardId === 'code' && !collapsedLessonCards.code;
+
+    setCollapsedLessonCards((current) => ({
+      ...current,
+      [cardId]: !current[cardId],
+    }));
+
+    if (shouldCollapseExpandedEditor) {
+      setIsEditorExpanded(false);
+    }
+  }
+
   function handleExpandMap() {
     setIsEditorExpanded(false);
     setViewMode('course-map');
@@ -417,10 +504,12 @@ function App() {
   }
 
   async function handleRunLesson() {
-    if (isCheckpointLocked) {
+    if (isSelectedLessonLocked || isCheckpointLocked) {
       setConsoleEntry({
         type: 'info',
-        message: 'Complete lessons 1-9 before running this checkpoint.',
+        message: isCheckpointLocked
+          ? 'Complete lessons 1-9 before running this checkpoint.'
+          : 'Complete the previous lesson before running this lesson.',
       });
       return;
     }
@@ -454,6 +543,7 @@ function App() {
       const nextLessonWork = {
         lessonId: selectedLesson.id,
         code,
+        baseCode: getLessonBaseCode(selectedLesson, lessonWorkById),
         checklistResult,
         checklistEvaluatedCode: code,
         starterCodeVersion: selectedLesson.starterCodeVersion ?? null,
@@ -513,6 +603,7 @@ function App() {
       const failedLessonWork = {
         lessonId: selectedLesson.id,
         code,
+        baseCode: getLessonBaseCode(selectedLesson, lessonWorkById),
         checklistResult: {},
         checklistEvaluatedCode: code,
         starterCodeVersion: selectedLesson.starterCodeVersion ?? null,
@@ -584,10 +675,22 @@ function App() {
       }, {}),
     [code, lessonWorkById, selectedLesson.id],
   );
+  const lessonUnlockById = useMemo(
+    () =>
+      lessons.reduce(
+        (unlockMap, lesson) => ({
+          ...unlockMap,
+          [lesson.id]: isLessonUnlocked(lesson, lessonCompletionById),
+        }),
+        {},
+      ),
+    [lessonCompletionById],
+  );
   const checkpointPrerequisites = useMemo(
     () => getCheckpointPrerequisites(selectedLesson),
     [selectedLesson],
   );
+  const isSelectedLessonLocked = !lessonUnlockById[selectedLesson.id];
   const isCheckpointLocked =
     selectedLesson.type === 'checkpoint' &&
     checkpointPrerequisites.some((lesson) => !lessonCompletionById[lesson.id]);
@@ -599,6 +702,9 @@ function App() {
     : selectedLesson.practice
       ? 'Practice'
       : 'Mini Task';
+  const isTargetCardCollapsed = Boolean(collapsedLessonCards.target);
+  const isWorkCardCollapsed = Boolean(collapsedLessonCards.work);
+  const isCodeCardCollapsed = Boolean(collapsedLessonCards.code);
 
   const appShellClassName = [
     'appShell',
@@ -621,6 +727,7 @@ function App() {
         viewMode={viewMode}
         railMode={roadmapRailMode}
         lessonCompletionById={lessonCompletionById}
+        lessonUnlockById={lessonUnlockById}
         lessonRunCounts={lessonRunCounts}
         onSelectLesson={handleSelectLesson}
         onSelectReference={handleSelectReference}
@@ -628,7 +735,9 @@ function App() {
       />
 
       <div
-        className="workspaceShell"
+        className={`workspaceShell ${
+          viewMode === 'lesson' ? 'isLessonWorkspace' : 'isReferenceWorkspace'
+        }`}
         aria-hidden={viewMode !== 'lesson' && viewMode !== 'reference'}
         inert={viewMode !== 'lesson' && viewMode !== 'reference' ? true : undefined}
       >
@@ -648,11 +757,28 @@ function App() {
           </div>
 
           <div className="lessonDetails">
-            <section className="lessonCard targetCard" aria-label="Lesson target">
+            <section
+              className={`lessonCard targetCard ${isTargetCardCollapsed ? 'isCollapsed' : ''}`}
+              aria-label="Lesson target"
+            >
               <div className="lessonCardHeader">
-                <p className="eyebrow">Target</p>
-                <h3>เป้าหมายและภาพรวม</h3>
+                <div>
+                  <p className="eyebrow">Target</p>
+                  <h3>เป้าหมายและภาพรวม</h3>
+                </div>
+                <button
+                  type="button"
+                  className="lessonCardToggle"
+                  aria-expanded={!isTargetCardCollapsed}
+                  onClick={() => handleToggleLessonCard('target')}
+                >
+                  <span className="srOnly">
+                    {isTargetCardCollapsed ? 'Open target card' : 'Collapse target card'}
+                  </span>
+                </button>
               </div>
+              {!isTargetCardCollapsed ? (
+                <div className="lessonCardBody">
             <section className="lessonInfoBlock">
               <h3>Goal</h3>
               <p>{selectedLesson.goal}</p>
@@ -783,15 +909,34 @@ function App() {
               )}
             </section>
 
+                </div>
+              ) : null}
             </section>
 
-            <section className="lessonCard workCard" aria-label="Lesson work">
+            <section
+              className={`lessonCard workCard ${isWorkCardCollapsed ? 'isCollapsed' : ''}`}
+              aria-label="Lesson work"
+            >
               <div className="lessonCardHeader">
-                <p className="eyebrow">Work</p>
-                <h3>เช็คงานและเขียน code</h3>
+                <div>
+                  <p className="eyebrow">Work</p>
+                  <h3>เช็คงานและคำใบ้</h3>
+                </div>
+                <button
+                  type="button"
+                  className="lessonCardToggle"
+                  aria-expanded={!isWorkCardCollapsed}
+                  onClick={() => handleToggleLessonCard('work')}
+                >
+                  <span className="srOnly">
+                    {isWorkCardCollapsed ? 'Open work card' : 'Collapse work card'}
+                  </span>
+                </button>
               </div>
 
-            {checklistItems.length > 0 && !isCheckpointLocked ? (
+              {!isWorkCardCollapsed ? (
+                <div className="lessonCardBody">
+            {checklistItems.length > 0 && !isSelectedLessonLocked && !isCheckpointLocked ? (
               <section className="lessonInfoBlock">
                 <div className="checklistHeader">
                   <h3>Lesson Checklist</h3>
@@ -865,7 +1010,10 @@ function App() {
                                 </>
                               ) : (
                                 <>
-                                  <p className="checkpointHintLevel">เฉลยเฉพาะข้อนี้</p>
+                                  <p className="checkpointHintLevel">ตัวอย่าง code ที่ผ่านข้อนี้</p>
+                                  <p className="checklistGuideCopyHint">
+                                    วางแทนเนื้อหาใน function generate() ได้เลย แล้วกด Run เพื่อตรวจข้อนี้
+                                  </p>
                                   <pre>
                                     <code>{guide.answerCode}</code>
                                   </pre>
@@ -879,11 +1027,39 @@ function App() {
                   })}
                 </ul>
               </section>
-            ) : null}
+            ) : (
+              <p className="lessonMutedText">Checklist จะพร้อมใช้งานเมื่อบทนี้เปิดให้ทำ</p>
+            )}
+                </div>
+              ) : null}
+            </section>
 
+            <section
+              className={`lessonCard codeCard ${isCodeCardCollapsed ? 'isCollapsed' : ''}`}
+              aria-label="Lesson code"
+            >
+              <div className="lessonCardHeader">
+                <div>
+                  <p className="eyebrow">Code</p>
+                  <h3>เขียนและทดสอบ code</h3>
+                </div>
+                <button
+                  type="button"
+                  className="lessonCardToggle"
+                  aria-expanded={!isCodeCardCollapsed}
+                  onClick={() => handleToggleLessonCard('code')}
+                >
+                  <span className="srOnly">
+                    {isCodeCardCollapsed ? 'Open code card' : 'Collapse code card'}
+                  </span>
+                </button>
+              </div>
+
+              {!isCodeCardCollapsed ? (
+                <div className="lessonCardBody">
           <div className="editorHeader">
             <p className="editorLabel">Code</p>
-            {!isCheckpointLocked ? (
+            {!isSelectedLessonLocked && !isCheckpointLocked ? (
               <button
                 type="button"
                 className="editorToggleButton"
@@ -895,10 +1071,14 @@ function App() {
               </button>
             ) : null}
           </div>
-          {isCheckpointLocked ? (
+          {isSelectedLessonLocked || isCheckpointLocked ? (
             <div className="lockedCodeNotice">
               <p className="checklistTitle">Code hidden</p>
-              <p>Starter code and Run are available after lessons 1-9 are complete.</p>
+              <p>
+                {isCheckpointLocked
+                  ? 'Starter code and Run are available after lessons 1-9 are complete.'
+                  : 'Code and Run are available after the previous lesson is complete.'}
+              </p>
             </div>
           ) : (
             <>
@@ -909,40 +1089,56 @@ function App() {
                 height={editorHeight}
               />
 
-              <div className="actionBar" aria-label="Lesson actions">
-                <button type="button" onClick={handleRunLesson}>
-                  Run
-                </button>
-                <button type="button" className="secondaryButton" onClick={handleResetLesson}>
-                  Reset
-                </button>
-                <button
-                  type="button"
-                  className="secondaryButton"
-                  onClick={handleDownloadPdf}
-                  disabled={!lastDoc}
-                >
-                  Download
-                </button>
-              </div>
-
-              <ConsolePanel entry={consoleEntry} />
+              <p className="editorFootnote">
+                ใช้ปุ่ม Run ทางขวาเพื่อสร้าง preview และตรวจ checklist ของบทนี้
+              </p>
             </>
           )}
+                </div>
+              ) : null}
             </section>
           </div>
             </section>
 
-            <section className="previewPane" aria-labelledby="preview-title">
+            <section className="previewPane lessonPreviewPane" aria-labelledby="preview-title">
               <div className="previewHeader">
                 <p className="eyebrow">Preview</p>
                 <h2 id="preview-title">PDF output</h2>
               </div>
               <PdfPreview pdfUrl={pdfUrl} />
+              <div className="previewActionPanel">
+                <div className="actionBar" aria-label="Lesson actions">
+                  <button
+                    type="button"
+                    onClick={handleRunLesson}
+                    disabled={isSelectedLessonLocked || isCheckpointLocked}
+                  >
+                    Run
+                  </button>
+                  <button
+                    type="button"
+                    className="secondaryButton"
+                    onClick={handleResetLesson}
+                    disabled={isSelectedLessonLocked || isCheckpointLocked}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    className="secondaryButton"
+                    onClick={handleDownloadPdf}
+                    disabled={!lastDoc || isSelectedLessonLocked || isCheckpointLocked}
+                  >
+                    Download
+                  </button>
+                </div>
+                <ConsolePanel entry={consoleEntry} />
+              </div>
             </section>
           </>
         )}
       </div>
+      <QuickReference isEnabled={viewMode === 'lesson'} />
     </main>
   );
 }

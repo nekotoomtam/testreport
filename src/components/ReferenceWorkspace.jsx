@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { jspdfCatalogSections } from '../reference/jspdfCatalog.js';
 
-function getReferenceItems() {
+export function getReferenceItems() {
   return jspdfCatalogSections.flatMap((section) =>
     section.items.map((item) => ({
       ...item,
@@ -214,7 +214,7 @@ function OutputVisual({ isSave = false }) {
   );
 }
 
-function ConceptVisual({ item }) {
+export function ConceptVisual({ item }) {
   switch (item.visualKind) {
     case 'overview':
       return <OverviewVisual />;
@@ -255,6 +255,32 @@ function ConceptVisual({ item }) {
     default:
       return <ConstructorVisual />;
   }
+}
+
+export function ReferenceTeachingPanel({ item }) {
+  return (
+    <>
+      <div className="conceptSurface">
+        <ConceptVisual item={item} />
+      </div>
+
+      <div className="conceptDetailPanel">
+        <code>{item.signature}</code>
+        <p>{item.mentalModel}</p>
+        <dl>
+          {item.parameters.map((parameter) => (
+            <div key={parameter.name}>
+              <dt>{parameter.name}</dt>
+              <dd>{parameter.detail}</dd>
+            </div>
+          ))}
+        </dl>
+        <pre>
+          <code>{item.example}</code>
+        </pre>
+      </div>
+    </>
+  );
 }
 
 function ReferenceWorkspace() {
@@ -309,25 +335,7 @@ function ReferenceWorkspace() {
           <h2 id="concept-title">{selectedReference.name}</h2>
         </div>
 
-        <div className="conceptSurface">
-          <ConceptVisual item={selectedReference} />
-        </div>
-
-        <div className="conceptDetailPanel">
-          <code>{selectedReference.signature}</code>
-          <p>{selectedReference.mentalModel}</p>
-          <dl>
-            {selectedReference.parameters.map((parameter) => (
-              <div key={parameter.name}>
-                <dt>{parameter.name}</dt>
-                <dd>{parameter.detail}</dd>
-              </div>
-            ))}
-          </dl>
-          <pre>
-            <code>{selectedReference.example}</code>
-          </pre>
-        </div>
+        <ReferenceTeachingPanel item={selectedReference} />
       </section>
     </>
   );
