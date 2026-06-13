@@ -136,24 +136,93 @@ export const dataReferenceSections = [
   },
   {
     id: 'transform',
-    title: 'Transform',
-    summary: 'เดินข้อมูลเป็นรอบที่ชัดเจน แทนการวาดไปคำนวณไป',
+    title: 'Select and Transform',
+    summary: 'คัดข้อมูลที่เกี่ยวกับเอกสารนี้ก่อน แล้วค่อยแปลง shape ให้ renderer ใช้',
     items: [
+      {
+        id: 'filter',
+        name: 'filter() for document rows',
+        apiType: 'array',
+        signature: "rawRows.filter(row => row.theme_code === selectedThemeId)",
+        mentalModel:
+          'filter() ใช้ตอน raw data มีหลายกลุ่มปนกัน แต่เอกสารหนึ่งใบต้องใช้เฉพาะข้อมูลของตัวเอง เช่นเลือกเฉพาะ rows ของธีม pink ก่อนเอาไปจัดเป็น quotation',
+        visualKind: 'filter',
+        parameters: [
+          { name: 'rawRows', detail: 'ข้อมูลดิบทั้งหมดที่อาจมีหลายใบเสนอราคาหรือหลาย theme ปนกัน' },
+          { name: 'condition', detail: 'เงื่อนไขที่บอกว่า row นี้เกี่ยวกับเอกสารที่กำลังทำอยู่หรือไม่' },
+          { name: 'selectedRows', detail: 'array ใหม่ที่เหลือเฉพาะแถวที่ผ่านเงื่อนไข' },
+        ],
+        example:
+          "const selectedThemeId = 'pink';\nconst selectedRows = rawRows.filter((row) => {\n  return row.theme_code === selectedThemeId;\n});",
+      },
+      {
+        id: 'find',
+        name: 'find() for one record',
+        apiType: 'array',
+        signature: "themes.find(theme => theme.id === selectedThemeId)",
+        mentalModel:
+          'find() ใช้เมื่ออยากได้ object แรกที่ตรงเงื่อนไข เช่นหา theme config หนึ่งตัวเพื่อเอาสี โลโก้ หรือ background ไปใช้ในเอกสาร',
+        visualKind: 'find',
+        parameters: [
+          { name: 'source array', detail: 'array ที่มีข้อมูลหลายตัว เช่น theme presets หรือ customer list' },
+          { name: 'match rule', detail: 'เงื่อนไขที่ใช้หา object ที่ต้องการ' },
+          { name: 'first match', detail: 'คืน object ตัวแรกที่ตรง ถ้าไม่เจอจะได้ undefined' },
+        ],
+        example:
+          "const theme = themes.find((theme) => {\n  return theme.id === selectedThemeId;\n});\n\nif (!theme) throw new Error('theme not found');",
+      },
+      {
+        id: 'find-index',
+        name: 'findIndex() for position',
+        apiType: 'array',
+        signature: "themes.findIndex(theme => theme.id === selectedThemeId)",
+        mentalModel:
+          'findIndex() ใช้เมื่อไม่ได้ต้องการแค่ object แต่ต้องรู้ตำแหน่งของมันด้วย เช่นใช้เลือก slide, ทำ tab active, หรือเช็คว่า theme ที่เลือกมีอยู่จริงไหม',
+        visualKind: 'find-index',
+        parameters: [
+          { name: 'index', detail: 'ตำแหน่งของ item ใน array เริ่มจาก 0' },
+          { name: '-1', detail: 'ค่าที่ได้เมื่อหาไม่เจอ ต้องเช็คก่อนเอา index ไปใช้ต่อ' },
+          { name: 'UI state', detail: 'เหมาะกับงานที่ต้อง sync ข้อมูลกับ tab, carousel หรือ step ปัจจุบัน' },
+        ],
+        example:
+          "const themeIndex = themes.findIndex((theme) => {\n  return theme.id === selectedThemeId;\n});\n\nif (themeIndex === -1) {\n  throw new Error('theme not found');\n}",
+      },
       {
         id: 'map',
         name: 'map() for rows',
         apiType: 'array',
-        signature: 'rawItems.map(normalizeItem)',
+        signature: 'selectedRows.map((row) => { return cleanItem; })',
         mentalModel:
-          'map() เหมาะกับการแปลง array หนึ่งชุดเป็น array อีกชุด เช่น raw product rows กลายเป็น quotation.items ที่พร้อมวาด',
+          'map() เดิน array ทีละ row: รอบแรก row คือ selectedRows[0], รอบสองคือ selectedRows[1] แล้วเอาค่าที่ return ในรอบนั้นไปเป็น items[0], items[1] ตามลำดับ ถ้าใช้ปีกกา { ... } ใน callback ต้องมี return ชัดเจน ไม่งั้น items แต่ละช่องจะกลายเป็น undefined',
         visualKind: 'map',
         parameters: [
-          { name: 'input array', detail: 'รายการดิบจาก API' },
-          { name: 'normalizeItem', detail: 'function ที่แปลง item ดิบหนึ่งตัวให้สะอาด' },
-          { name: 'output array', detail: 'รายการที่ renderer วาดได้ทันที' },
+          { name: 'selectedRows', detail: 'array ต้นทางที่มีหลาย row จาก filter() แล้ว' },
+          { name: 'row', detail: 'ข้อมูลหนึ่งแถวในรอบปัจจุบัน เช่น row.product_name หรือ row.quantity' },
+          { name: 'callback', detail: 'function เล็กที่ map เรียกซ้ำให้ทุก row เพื่อสร้าง item ใหม่ทีละตัว' },
+          { name: 'local variables', detail: 'ตัวแปรที่สร้างใน callback เช่น quantity/unitPrice ใช้ได้เฉพาะรอบนั้น' },
+          { name: 'return object', detail: 'ค่าที่ return ในแต่ละรอบ คือ item ใหม่หนึ่งตัวที่จะถูกใส่เข้า items array' },
+          { name: 'items', detail: 'array ใหม่ที่มีจำนวนแถวเท่ากับ selectedRows แต่ field สะอาดกว่า' },
         ],
         example:
-          'const items = rawItems.map((rawItem) => ({\n  code: textOrDash(rawItem.code),\n  quantity: toNumber(rawItem.amount),\n}));',
+          'const items = selectedRows.map((row) => {\n  const quantity = Number(row.quantity || 0);\n  const unitPrice = Number(row.unit_price || 0);\n\n  return {\n    code: row.product_code,\n    name: row.product_name,\n    quantity,\n    unitPrice,\n    lineTotal: quantity * unitPrice,\n  };\n});',
+      },
+      {
+        id: 'for-each',
+        name: 'forEach() for drawing rows',
+        apiType: 'array',
+        signature: 'data.items.forEach((item, index) => { drawRow(item, index); })',
+        mentalModel:
+          'forEach() เดิน array ทีละ item เพื่อทำงานบางอย่างกับแต่ละแถว เช่นวาด doc.text() ลง PDF โดยไม่ได้สร้าง array ใหม่ ค่าที่ return จาก forEach จะไม่ถูกเอาไปใช้ต่อ จุดสำคัญคือใช้ index คำนวณตำแหน่ง y ของแถวได้',
+        visualKind: 'for-each',
+        parameters: [
+          { name: 'data.items', detail: 'array ของรายการสินค้าที่ normalize แล้ว พร้อมเอาไปวาดเป็น table rows' },
+          { name: 'item', detail: 'ข้อมูลหนึ่งแถวในรอบปัจจุบัน เช่น item.name, item.quantity, item.lineTotal' },
+          { name: 'index', detail: 'ลำดับแถว เริ่มจาก 0 ใช้คูณ rowHeight เพื่อขยับตำแหน่ง y ทีละแถว' },
+          { name: 'rowY', detail: 'ตำแหน่ง y ของแถวนั้น มักคำนวณจาก currentY + index * rowHeight' },
+          { name: 'side effect', detail: 'งานที่เกิดขึ้นในแต่ละรอบ เช่น doc.text(), doc.rect(), doc.line()' },
+        ],
+        example:
+          "const rowHeight = 10;\nlet currentY = tableTop + 10;\n\ndata.items.forEach((item, index) => {\n  const rowY = currentY + index * rowHeight;\n\n  doc.text(item.name, columns[0].x, rowY + 7);\n  doc.text(String(item.quantity), columns[1].x, rowY + 7, { align: 'right' });\n  doc.text(item.lineTotal.toFixed(2), columns[4].x, rowY + 7, { align: 'right' });\n});",
       },
       {
         id: 'reduce',

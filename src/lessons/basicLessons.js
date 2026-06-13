@@ -1,3 +1,5 @@
+import { quotationLessons } from './quotationLessons.js';
+
 const projectBriefStarterVersion = 8;
 
 const blankStarterCode = `function generate() {
@@ -1023,6 +1025,7 @@ export const lessons = [
     starterCodeVersion: projectBriefStarterVersion,
     solutionCode: stage9,
   },
+  ...quotationLessons,
 ];
 
 export const starterLesson = lessons[0];

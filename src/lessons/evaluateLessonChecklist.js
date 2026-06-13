@@ -870,6 +870,543 @@ function hasImageAssetFlow(code) {
   );
 }
 
+function hasFunctionDeclaration(code, functionName) {
+  const pattern = new RegExp(`function\\s+${functionName}\\s*\\(`);
+
+  return pattern.test(code);
+}
+
+function hasThaiFontReady(code) {
+  return /registerThaiFont\(\s*doc\s*\)/i.test(code) && hasThaiFontSetCall(code);
+}
+
+function hasRawRowsArray(code) {
+  return /\b(?:const|let|var)\s+rawRows\s*=\s*\[/i.test(code) && /theme_code/i.test(code);
+}
+
+function hasQuotationRowsDataSource(code) {
+  return (
+    /\b(?:const|let|var)\s+rawRows\s*=\s*getLessonData\s*\(\s*['"]quotationRows['"]\s*\)/i.test(code) ||
+    /getLessonData\s*\(\s*['"]quotationRows['"]\s*\)/i.test(code)
+  );
+}
+
+function hasSelectedThemeId(code) {
+  return /\b(?:const|let|var)\s+selectedThemeId\s*=\s*['"](blue|green|pink)['"]/i.test(code);
+}
+
+function hasThemesArray(code) {
+  return /\b(?:const|let|var)\s+themes\s*=\s*\[/i.test(code) && /backgroundPath/i.test(code);
+}
+
+function hasFilterSelectedRows(code) {
+  return (
+    /\.filter\s*\(/i.test(code) &&
+    /theme_code/i.test(code) &&
+    /selectedThemeId/i.test(code) &&
+    /selectedRows/i.test(code)
+  );
+}
+
+function hasFindTheme(code) {
+  return /themes\.find\s*\(/i.test(code) && /selectedThemeId/i.test(code);
+}
+
+function hasFindThemeIndex(code) {
+  return /themes\.findIndex\s*\(/i.test(code) || /themeIndex\s*===\s*-1/i.test(code);
+}
+
+function hasNormalizeQuotationFunction(code) {
+  return (
+    hasFunctionDeclaration(code, 'normalizeQuotationData') &&
+    /rawRows/i.test(code) &&
+    /selectedThemeId/i.test(code)
+  );
+}
+
+function hasModelSection(code, sectionName) {
+  const pattern = new RegExp(`${sectionName}\\s*:\\s*{`, 'i');
+
+  return pattern.test(code);
+}
+
+function hasFirstSelectedRow(code) {
+  return /\b(?:const|let|var)\s+firstRow\s*=\s*selectedRows\s*\[\s*0\s*\]/i.test(code);
+}
+
+function hasReturnedModelReference(code, sectionName) {
+  const returnedPropertyPattern = new RegExp(`return\\s*{[\\s\\S]*\\b${sectionName}\\s*:`, 'i');
+  const returnedShorthandPattern = new RegExp(`return\\s*{[\\s\\S]*\\b${sectionName}\\s*(?:,|})`, 'i');
+
+  return returnedPropertyPattern.test(code) || returnedShorthandPattern.test(code);
+}
+
+function escapeRegExp(source) {
+  return source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function findMatchingBraceIndex(source, openBraceIndex) {
+  let depth = 0;
+  let quote = '';
+  let escaping = false;
+
+  for (let index = openBraceIndex; index < source.length; index += 1) {
+    const char = source[index];
+
+    if (quote) {
+      if (escaping) {
+        escaping = false;
+      } else if (char === '\\') {
+        escaping = true;
+      } else if (char === quote) {
+        quote = '';
+      }
+      continue;
+    }
+
+    if (char === '"' || char === "'" || char === '`') {
+      quote = char;
+      continue;
+    }
+
+    if (char === '{') {
+      depth += 1;
+    } else if (char === '}') {
+      depth -= 1;
+
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+
+  return -1;
+}
+
+function extractAssignedObjectSource(code, variableName) {
+  const pattern = new RegExp(`\\b(?:const|let|var)\\s+${escapeRegExp(variableName)}\\s*=\\s*{`, 'i');
+  const match = pattern.exec(code);
+
+  if (!match) {
+    return '';
+  }
+
+  const openBraceIndex = code.indexOf('{', match.index);
+  const closeBraceIndex = findMatchingBraceIndex(code, openBraceIndex);
+
+  return closeBraceIndex === -1 ? '' : code.slice(openBraceIndex, closeBraceIndex + 1);
+}
+
+function findStatementEndIndex(source, startIndex) {
+  let depth = 0;
+  let quote = '';
+  let escaping = false;
+
+  for (let index = startIndex; index < source.length; index += 1) {
+    const char = source[index];
+
+    if (quote) {
+      if (escaping) {
+        escaping = false;
+      } else if (char === '\\') {
+        escaping = true;
+      } else if (char === quote) {
+        quote = '';
+      }
+      continue;
+    }
+
+    if (char === '"' || char === "'" || char === '`') {
+      quote = char;
+      continue;
+    }
+
+    if (char === '(' || char === '[' || char === '{') {
+      depth += 1;
+    } else if (char === ')' || char === ']' || char === '}') {
+      depth = Math.max(0, depth - 1);
+    } else if (char === ';' && depth === 0) {
+      return index;
+    }
+  }
+
+  return source.length - 1;
+}
+
+function extractVariableDeclarationSource(code, variableName) {
+  const pattern = new RegExp(`\\b(?:const|let|var)\\s+${escapeRegExp(variableName)}\\s*=`, 'i');
+  const match = pattern.exec(code);
+
+  if (!match) {
+    return '';
+  }
+
+  const endIndex = findStatementEndIndex(code, match.index);
+
+  return code.slice(match.index, endIndex + 1);
+}
+
+function extractInlineReturnedObjectSource(code, propertyName) {
+  const returnPattern = /return\s*{/gi;
+  const propertyPattern = new RegExp(`\\b${escapeRegExp(propertyName)}\\s*:\\s*{`, 'i');
+  let returnMatch = returnPattern.exec(code);
+
+  while (returnMatch) {
+    const returnOpenBraceIndex = code.indexOf('{', returnMatch.index);
+    const returnCloseBraceIndex = findMatchingBraceIndex(code, returnOpenBraceIndex);
+
+    if (returnCloseBraceIndex === -1) {
+      return '';
+    }
+
+    const returnBody = code.slice(returnOpenBraceIndex, returnCloseBraceIndex + 1);
+    const propertyMatch = propertyPattern.exec(returnBody);
+
+    if (propertyMatch) {
+      const propertyOpenBraceIndex = returnOpenBraceIndex + propertyMatch.index + returnBody.slice(propertyMatch.index).indexOf('{');
+      const propertyCloseBraceIndex = findMatchingBraceIndex(code, propertyOpenBraceIndex);
+
+      return propertyCloseBraceIndex === -1 ? '' : code.slice(propertyOpenBraceIndex, propertyCloseBraceIndex + 1);
+    }
+
+    returnMatch = returnPattern.exec(code);
+  }
+
+  return '';
+}
+
+function getReturnedModelObjectSources(code, modelName) {
+  const sources = [];
+  const assignedObject = extractAssignedObjectSource(code, modelName);
+
+  if (assignedObject && hasReturnedModelReference(code, modelName)) {
+    sources.push(assignedObject);
+  }
+
+  const inlineObject = extractInlineReturnedObjectSource(code, modelName);
+
+  if (inlineObject) {
+    sources.push(inlineObject);
+  }
+
+  return sources;
+}
+
+function hasFirstRowField(objectSource, key, fieldName) {
+  const fieldPattern = new RegExp(
+    `\\b${escapeRegExp(key)}\\s*:\\s*(?:formatThaiDate\\s*\\(\\s*)?firstRow\\s*\\.\\s*${escapeRegExp(fieldName)}\\b`,
+    'i',
+  );
+
+  return fieldPattern.test(objectSource);
+}
+
+function hasAllFirstRowFieldsInReturnedModel(code, modelName, fields) {
+  return getReturnedModelObjectSources(code, modelName).some((objectSource) =>
+    fields.every(([key, fieldName]) => hasFirstRowField(objectSource, key, fieldName)),
+  );
+}
+
+function hasObjectField(objectSource, fieldName) {
+  const pattern = new RegExp(`\\b${escapeRegExp(fieldName)}\\b\\s*(?::|,|})`, 'i');
+
+  return pattern.test(objectSource);
+}
+
+function hasAllObjectFields(objectSource, fieldNames) {
+  return fieldNames.every((fieldName) => hasObjectField(objectSource, fieldName));
+}
+
+function hasDocumentModel(code) {
+  return hasAllFirstRowFieldsInReturnedModel(code, 'document', [
+    ['quoteNo', 'quo_no'],
+    ['quoteDate', 'quo_date'],
+    ['validUntil', 'quo_valid_until'],
+  ]);
+}
+
+function hasCustomerModel(code) {
+  return hasAllFirstRowFieldsInReturnedModel(code, 'customer', [
+    ['name', 'quo_cus_name'],
+    ['contact', 'quo_cus_contact'],
+    ['address', 'quo_cus_address'],
+    ['tel', 'quo_tel'],
+    ['email', 'quo_email'],
+  ]);
+}
+
+function hasItemsModel(code) {
+  const itemsSource = extractVariableDeclarationSource(code, 'items');
+
+  return (
+    /items\s*=\s*selectedRows\.map\s*\(/i.test(itemsSource) &&
+    /\bcode\s*:\s*row\.product_code\b/i.test(itemsSource) &&
+    /\bname\s*:\s*row\.product_name\b/i.test(itemsSource) &&
+    /\bsize\s*:\s*row\.product_size\b/i.test(itemsSource) &&
+    /\bdescription\s*:\s*row\.product_description\b/i.test(itemsSource) &&
+    (/\bquantity\s*:\s*row\.quantity\b/i.test(itemsSource) ||
+      /\bquantity\s*=\s*(?:Number|toNumber)\s*\(\s*row\.quantity\b/i.test(itemsSource)) &&
+    (/\bunitPrice\s*:\s*row\.unit_price\b/i.test(itemsSource) ||
+      /\bunitPrice\s*=\s*(?:Number|toNumber)\s*\(\s*row\.unit_price\b/i.test(itemsSource)) &&
+    hasReturnedModelReference(code, 'items')
+  );
+}
+
+function hasGenerateUsesNormalizedData(code) {
+  return /normalizeQuotationData\s*\(\s*rawRows\s*,\s*selectedThemeId\s*\)/i.test(code);
+}
+
+function hasNumberConversion(code) {
+  const itemsSource = extractVariableDeclarationSource(code, 'items');
+
+  return (
+    (/\bquantity\s*=\s*(?:Number|toNumber)\s*\(\s*row\.quantity\b/i.test(itemsSource) ||
+      /\bquantity\s*:\s*(?:Number|toNumber)\s*\(\s*row\.quantity\b/i.test(itemsSource)) &&
+    (/\bunitPrice\s*=\s*(?:Number|toNumber)\s*\(\s*row\.unit_price\b/i.test(itemsSource) ||
+      /\bunitPrice\s*:\s*(?:Number|toNumber)\s*\(\s*row\.unit_price\b/i.test(itemsSource))
+  );
+}
+
+function hasLineTotalCalculation(code) {
+  const itemsSource = extractVariableDeclarationSource(code, 'items');
+
+  return /lineTotal\s*:\s*quantity\s*\*\s*unitPrice/i.test(itemsSource) ||
+    /\blineTotal\s*=\s*quantity\s*\*\s*unitPrice/i.test(itemsSource);
+}
+
+function hasSubtotalReduce(code) {
+  return /\bsubtotal\s*=\s*items\.reduce\s*\(/i.test(code) && /item\.lineTotal/i.test(code);
+}
+
+function hasGrandTotal(code) {
+  return getReturnedModelObjectSources(code, 'totals').some((objectSource) =>
+    hasAllObjectFields(objectSource, ['subtotal', 'discount', 'shipping', 'vat', 'grandTotal']),
+  );
+}
+
+function hasRenderQuotationFunction(code) {
+  return hasFunctionDeclaration(code, 'renderQuotation') && /data/i.test(code);
+}
+
+function hasGenerateRenderFlow(code) {
+  return (
+    hasGenerateUsesNormalizedData(code) &&
+    /return\s+renderQuotation\s*\(\s*data\s*\)/i.test(code)
+  );
+}
+
+function hasThemeBackgroundFlow(code) {
+  return (
+    /getLessonImage\s*\(\s*(?:theme|data\.theme)\.backgroundPath\s*\)/i.test(code) &&
+    /doc\.addImage\s*\(/i.test(code)
+  );
+}
+
+function hasQuotationHeaderText(code) {
+  return /ใบเสนอราคา/.test(code) && /data\.document\.quoteNo/i.test(code) && /data\.document\.quoteDate/i.test(code);
+}
+
+function hasDocTextSource(code, pattern) {
+  return findCallArgumentSources(code, /doc\.text\s*\(/gi).some((textCallSource) =>
+    pattern.test(textCallSource),
+  );
+}
+
+function hasCustomerCardRect(code) {
+  return /ข้อมูลลูกค้า/.test(code) && countFilledDrawnRects(code) > 0;
+}
+
+function hasColumnsArray(code) {
+  return /\b(?:const|let|var)\s+columns\s*=\s*\[/i.test(code);
+}
+
+function hasTableLabels(code) {
+  return ['รายการ', 'จำนวน', 'หน่วย', 'ราคา', 'รวม'].every((label) => code.includes(label));
+}
+
+function hasColumnsLoop(code) {
+  return /columns\.(forEach|map)\s*\(/i.test(code);
+}
+
+function hasNumericAlign(code) {
+  return /align\s*:\s*['"]right['"]/i.test(code) || /align\s*:\s*column\.align/i.test(code);
+}
+
+function hasItemsLoop(code) {
+  return /data\.items\.(forEach|map)\s*\(/i.test(code);
+}
+
+function hasRowPositionFlow(code) {
+  return /rowHeight/i.test(code) && /(rowY|currentY)/i.test(code);
+}
+
+function hasItemFieldsInRows(code) {
+  return (
+    /item\.name/i.test(code) &&
+    /item\.quantity/i.test(code) &&
+    /item\.unitPrice/i.test(code) &&
+    /item\.lineTotal/i.test(code)
+  );
+}
+
+function hasMoneyFormat(code) {
+  return /\.toFixed\s*\(\s*2\s*\)/i.test(code) || /money\.format\s*\(/i.test(code);
+}
+
+function hasPageBottomY(code) {
+  return /pageBottomY/i.test(code) || /pageBottom/i.test(code);
+}
+
+function hasAddPageFlow(code) {
+  return /doc\.addPage\s*\(/i.test(code);
+}
+
+function hasRepeatPageContext(code) {
+  return (
+    hasAddPageFlow(code) &&
+    /backgroundImage/i.test(code) &&
+    /(tableTop|tableStartY|continuedTableStartY)/i.test(code)
+  );
+}
+
+function hasTotalsBlock(code) {
+  return ['subtotal', 'discount', 'shipping', 'vat', 'grandTotal'].every((name) =>
+    new RegExp(name, 'i').test(code),
+  );
+}
+
+function hasSignatureBlock(code) {
+  return /ผู้เสนอราคา/.test(code) && /(ผู้อนุมัติ|อนุมัติ)/.test(code);
+}
+
+function hasQuotationStage1Data(code, doc) {
+  return (
+    hasStage1Base(code, doc) &&
+    hasThaiFontReady(code) &&
+    hasQuotationRowsDataSource(code)
+  );
+}
+
+function hasQuotationStage2ThemeId(code, doc) {
+  return (
+    hasQuotationStage1Data(code, doc) &&
+    hasSelectedThemeId(code)
+  );
+}
+
+function hasQuotationStage3Filter(code, doc) {
+  return (
+    hasQuotationStage2ThemeId(code, doc) &&
+    hasFilterSelectedRows(code)
+  );
+}
+
+function hasQuotationStage4ThemeConfig(code, doc) {
+  return (
+    hasQuotationStage3Filter(code, doc) &&
+    hasThemesArray(code) &&
+    hasFindTheme(code) &&
+    hasFindThemeIndex(code)
+  );
+}
+
+function hasQuotationStage5Normalize(code, doc) {
+  return (
+    hasQuotationStage4ThemeConfig(code, doc) &&
+    hasNormalizeQuotationFunction(code) &&
+    hasGenerateUsesNormalizedData(code)
+  );
+}
+
+function hasQuotationStage6DocumentCustomer(code, doc) {
+  return (
+    hasQuotationStage5Normalize(code, doc) &&
+    hasFirstSelectedRow(code) &&
+    hasDocumentModel(code) &&
+    hasCustomerModel(code)
+  );
+}
+
+function hasQuotationStage7Items(code, doc) {
+  return (
+    hasQuotationStage6DocumentCustomer(code, doc) &&
+    hasItemsModel(code)
+  );
+}
+
+function hasQuotationStage8Numbers(code, doc) {
+  return (
+    hasQuotationStage7Items(code, doc) &&
+    hasNumberConversion(code) &&
+    hasLineTotalCalculation(code)
+  );
+}
+
+function hasQuotationStage9Totals(code, doc) {
+  return (
+    hasQuotationStage8Numbers(code, doc) &&
+    hasSubtotalReduce(code) &&
+    hasGrandTotal(code)
+  );
+}
+
+function hasQuotationStage10Render(code, doc) {
+  return (
+    hasQuotationStage9Totals(code, doc) &&
+    hasRenderQuotationFunction(code) &&
+    hasGenerateRenderFlow(code)
+  );
+}
+
+function hasQuotationStage11Header(code, doc) {
+  return (
+    hasQuotationStage10Render(code, doc) &&
+    hasThemeBackgroundFlow(code) &&
+    hasQuotationHeaderText(code)
+  );
+}
+
+function hasQuotationStage12Customer(code, doc) {
+  return (
+    hasQuotationStage11Header(code, doc) &&
+    hasCustomerCardRect(code) &&
+    hasDocTextSource(code, /data\.customer\.name/i) &&
+    hasDocTextSource(code, /data\.customer\.contact/i) &&
+    hasDocTextSource(code, /data\.document\.validUntil/i)
+  );
+}
+
+function hasQuotationStage13TableHeader(code, doc) {
+  return (
+    hasQuotationStage12Customer(code, doc) &&
+    hasColumnsArray(code) &&
+    hasTableLabels(code) &&
+    hasColumnsLoop(code) &&
+    hasNumericAlign(code)
+  );
+}
+
+function hasQuotationStage14Rows(code, doc) {
+  return (
+    hasQuotationStage13TableHeader(code, doc) &&
+    hasItemsLoop(code) &&
+    hasRowPositionFlow(code) &&
+    hasItemFieldsInRows(code) &&
+    hasMoneyFormat(code)
+  );
+}
+
+function hasQuotationStage15PagesAndTotals(code, doc) {
+  return (
+    hasQuotationStage14Rows(code, doc) &&
+    hasPageBottomY(code) &&
+    hasAddPageFlow(code) &&
+    hasRepeatPageContext(code) &&
+    hasTotalsBlock(code) &&
+    hasSignatureBlock(code)
+  );
+}
+
 function hasStage1Base(code, doc) {
   return (
     hasOption(code, 'unit', 'mm') &&
@@ -1067,6 +1604,123 @@ const lessonCheckers = {
       hasMilestonesIteration(code),
     'final-wrap': ({ code }) => hasWrappedSummaryInCard(code),
     'final-footer': ({ code }) => hasProjectBriefFooter(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-get-data': {
+    'page-a4-mm': ({ code, doc }) =>
+      hasOption(code, 'unit', 'mm') && (hasOption(code, 'format', 'a4') || hasA4PortraitPage(doc)),
+    'thai-font-ready': ({ code }) => hasThaiFontReady(code),
+    'raw-rows': ({ code }) => hasQuotationRowsDataSource(code),
+    'return-doc': ({ code }) => hasReturnDoc(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-pick-theme': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage1Data(code, doc),
+    'selected-theme-id': ({ code }) => hasSelectedThemeId(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-filter-rows': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage2ThemeId(code, doc),
+    'filter-selected-rows': ({ code }) => hasFilterSelectedRows(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-theme-config': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage3Filter(code, doc),
+    'themes-array': ({ code }) => hasThemesArray(code),
+    'find-theme': ({ code }) => hasFindTheme(code),
+    'find-theme-index': ({ code }) => hasFindThemeIndex(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-normalize-start': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage4ThemeConfig(code, doc),
+    'normalize-function': ({ code }) => hasNormalizeQuotationFunction(code),
+    'generate-uses-data': ({ code }) => hasGenerateUsesNormalizedData(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-document-customer': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage5Normalize(code, doc),
+    'first-row': ({ code }) => hasFirstSelectedRow(code),
+    'document-model': ({ code }) => hasDocumentModel(code),
+    'customer-model': ({ code }) => hasCustomerModel(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-map-items': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage6DocumentCustomer(code, doc),
+    'items-model': ({ code }) => hasItemsModel(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-convert-numbers': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage7Items(code, doc),
+    'number-conversion': ({ code }) => hasNumberConversion(code),
+    'line-total': ({ code }) => hasLineTotalCalculation(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-reduce-totals': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage8Numbers(code, doc),
+    'subtotal-reduce': ({ code }) => hasSubtotalReduce(code),
+    'grand-total': ({ code }) => hasGrandTotal(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-render-start': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage9Totals(code, doc),
+    'render-function': ({ code }) => hasRenderQuotationFunction(code),
+    'generate-render-flow': ({ code }) => hasGenerateRenderFlow(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-header-background': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage10Render(code, doc),
+    'theme-background': ({ code }) => hasThemeBackgroundFlow(code),
+    'quotation-header': ({ code }) => hasQuotationHeaderText(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-customer-card': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage11Header(code, doc),
+    'customer-card-rect': ({ code }) => hasCustomerCardRect(code),
+    'customer-name-text': ({ code }) => hasDocTextSource(code, /data\.customer\.name/i),
+    'customer-contact-text': ({ code }) => hasDocTextSource(code, /data\.customer\.contact/i),
+    'valid-until-text': ({ code }) => hasDocTextSource(code, /data\.document\.validUntil/i),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-table-columns': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage12Customer(code, doc),
+    'columns-array': ({ code }) => hasColumnsArray(code),
+    'table-labels': ({ code }) => hasTableLabels(code),
+    'columns-loop': ({ code }) => hasColumnsLoop(code),
+    'numeric-align': ({ code }) => hasNumericAlign(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-item-rows': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage13TableHeader(code, doc),
+    'items-loop': ({ code }) => hasItemsLoop(code),
+    'row-position': ({ code }) => hasRowPositionFlow(code),
+    'item-fields': ({ code }) => hasItemFieldsInRows(code),
+    'money-format': ({ code }) => hasMoneyFormat(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'quotation-pages-totals': {
+    'previous-stage': ({ code, doc }) => hasQuotationStage14Rows(code, doc),
+    'page-bottom-y': ({ code }) => hasPageBottomY(code),
+    'add-page': ({ code }) => hasAddPageFlow(code),
+    'repeat-page-context': ({ code }) => hasRepeatPageContext(code),
+    'totals-block': ({ code }) => hasTotalsBlock(code),
+    'signature-block': ({ code }) => hasSignatureBlock(code),
+    'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
+  },
+  'checkpoint-quotation-pdf': {
+    'final-normalize-render': ({ code }) =>
+      hasNormalizeQuotationFunction(code) &&
+      hasRenderQuotationFunction(code) &&
+      hasGenerateRenderFlow(code),
+    'final-filter-theme': ({ code }) =>
+      hasFilterSelectedRows(code) && hasFindTheme(code) && hasFindThemeIndex(code),
+    'final-model-shape': ({ code }) =>
+      hasDocumentModel(code) &&
+      hasCustomerModel(code) &&
+      hasItemsModel(code) &&
+      hasGrandTotal(code),
+    'final-table': ({ code }) => hasColumnsArray(code) && hasItemsLoop(code),
+    'final-pagination': ({ code }) => hasPageBottomY(code) && hasAddPageFlow(code),
+    'final-totals-signature': ({ code }) => hasTotalsBlock(code) && hasSignatureBlock(code),
     'run-preview': ({ doc }) => Boolean(doc && typeof doc.output === 'function'),
   },
 };

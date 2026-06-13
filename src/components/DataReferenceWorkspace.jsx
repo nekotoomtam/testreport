@@ -128,15 +128,89 @@ function DateFormatVisual() {
   );
 }
 
-function MapVisual() {
+function FilterVisual() {
   return (
     <div className="conceptDataPaper">
       <div className="conceptDataRows">
-        <span>{'raw item A -> clean item A'}</span>
-        <span>{'raw item B -> clean item B'}</span>
-        <span>{'raw item C -> clean item C'}</span>
+        <span>blue row</span>
+        <span>green row</span>
+        <span>pink row</span>
+        <span>pink row</span>
       </div>
-      <span className="conceptDataModelLabel">map keeps array length</span>
+      <span className="conceptDataTransformLabel">filter(theme === "pink")</span>
+      <div className="conceptDataObject">
+        <span>pink row</span>
+        <span>pink row</span>
+      </div>
+    </div>
+  );
+}
+
+function FindVisual() {
+  return (
+    <div className="conceptDataPaper">
+      <div className="conceptDataRows">
+        <span>{'{ id: "blue", color }'}</span>
+        <span>{'{ id: "green", color }'}</span>
+        <span>{'{ id: "pink", color }'}</span>
+      </div>
+      <span className="conceptDataTransformLabel">find(id === "green")</span>
+      <div className="conceptDataObject">
+        <span>{'{ id: "green", color }'}</span>
+      </div>
+    </div>
+  );
+}
+
+function FindIndexVisual() {
+  return (
+    <div className="conceptDataPaper">
+      <div className="conceptDataRows">
+        <span>0: blue</span>
+        <span>1: green</span>
+        <span>2: pink</span>
+      </div>
+      <span className="conceptDataTransformLabel">findIndex(id === "pink")</span>
+      <div className="conceptDataObject">
+        <span>index = 2</span>
+        <span>not found = -1</span>
+      </div>
+    </div>
+  );
+}
+
+function MapVisual() {
+  return (
+    <div className="conceptDataPaper conceptMapPaper">
+      <div className="conceptDataRows">
+        <span>{'selectedRows[0]'}</span>
+        <span>{'selectedRows[1]'}</span>
+        <span>{'selectedRows[2]'}</span>
+      </div>
+      <span className="conceptDataTransformLabel">{'map((row) => { ... })'}</span>
+      <div className="conceptDataObject">
+        <span>{'const quantity = Number(row.quantity)'}</span>
+        <span>{'return { name, quantity, lineTotal }'}</span>
+      </div>
+      <span className="conceptDataModelLabel">{'items = [return รอบ 1, return รอบ 2, return รอบ 3]'}</span>
+    </div>
+  );
+}
+
+function ForEachVisual() {
+  return (
+    <div className="conceptDataPaper conceptMapPaper">
+      <div className="conceptDataRows">
+        <span>{'items[0]'}</span>
+        <span>{'items[1]'}</span>
+        <span>{'items[2]'}</span>
+      </div>
+      <span className="conceptDataTransformLabel">{'forEach((item, index) => { ... })'}</span>
+      <div className="conceptDataObject">
+        <span>{'rowY = currentY + index * rowHeight'}</span>
+        <span>{'doc.text(item.name, x, rowY)'}</span>
+      </div>
+      <span className="conceptDataModelLabel">draw one PDF row per item</span>
     </div>
   );
 }
@@ -203,8 +277,16 @@ function DataConceptVisual({ item }) {
       return <MoneyFormatVisual />;
     case 'date-format':
       return <DateFormatVisual />;
+    case 'filter':
+      return <FilterVisual />;
+    case 'find':
+      return <FindVisual />;
+    case 'find-index':
+      return <FindIndexVisual />;
     case 'map':
       return <MapVisual />;
+    case 'for-each':
+      return <ForEachVisual />;
     case 'reduce':
       return <ReduceVisual />;
     case 'normalize':
@@ -216,7 +298,7 @@ function DataConceptVisual({ item }) {
   }
 }
 
-function DataReferenceTeachingPanel({ item }) {
+export function DataReferenceTeachingPanel({ item }) {
   return (
     <>
       <div className="conceptSurface">

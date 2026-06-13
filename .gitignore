@@ -1,4 +1,5 @@
 node_modules/
 dist/
+outputs/
 .codex-dev-server.*
 .DS_Store

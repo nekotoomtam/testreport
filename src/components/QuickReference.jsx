@@ -1,12 +1,57 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { jspdfCatalogSections } from '../reference/jspdfCatalog.js';
+import { dataReferenceSections } from '../reference/dataReferenceCatalog.js';
+import {
+  DataReferenceTeachingPanel,
+  getDataReferenceItems,
+} from './DataReferenceWorkspace.jsx';
 import { getReferenceItems, ReferenceTeachingPanel } from './ReferenceWorkspace.jsx';
 
-function QuickReference({ isEnabled }) {
-  const referenceItems = useMemo(() => getReferenceItems(), []);
+function QuickReference({ isEnabled, isDataReferenceEnabled = false }) {
+  const jsPdfReferenceItems = useMemo(() => getReferenceItems(), []);
+  const dataReferenceItems = useMemo(() => getDataReferenceItems(), []);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedReferenceId, setSelectedReferenceId] = useState(null);
-  const selectedReference = referenceItems.find((item) => item.id === selectedReferenceId);
+  const [activeGuideId, setActiveGuideId] = useState('jspdf');
+  const [selectedReferenceTarget, setSelectedReferenceTarget] = useState(null);
+  const dataGuide = {
+    id: 'data',
+    title: 'Data nodes',
+    eyebrow: 'Data Ref',
+    sections: dataReferenceSections,
+    items: dataReferenceItems,
+    TeachingPanel: DataReferenceTeachingPanel,
+  };
+  const jsPdfGuide = {
+    id: 'jspdf',
+    title: 'jsPDF nodes',
+    eyebrow: 'Quick Ref',
+    sections: jspdfCatalogSections,
+    items: jsPdfReferenceItems,
+    TeachingPanel: ReferenceTeachingPanel,
+  };
+  const activeGuide = activeGuideId === 'data' && isDataReferenceEnabled ? dataGuide : jsPdfGuide;
+  const selectedGuide =
+    selectedReferenceTarget?.guideId === 'data' && isDataReferenceEnabled ? dataGuide : jsPdfGuide;
+  const selectedReference = selectedReferenceTarget
+    ? selectedGuide.items.find((item) => item.id === selectedReferenceTarget.itemId)
+    : null;
+  const SelectedTeachingPanel = selectedGuide.TeachingPanel;
+
+  useEffect(() => {
+    if (!isDataReferenceEnabled && activeGuideId === 'data') {
+      setActiveGuideId('jspdf');
+      setSelectedReferenceTarget(null);
+    }
+  }, [activeGuideId, isDataReferenceEnabled]);
+
+  function handleToggleGuide(guideId) {
+    if (guideId === 'data' && !isDataReferenceEnabled) {
+      return;
+    }
+
+    setActiveGuideId(guideId);
+    setIsDrawerOpen((current) => (activeGuideId === guideId ? !current : true));
+  }
 
   if (!isEnabled) {
     return null;
@@ -17,14 +62,28 @@ function QuickReference({ isEnabled }) {
       <button
         type="button"
         className="quickRefToggle"
-        aria-label={isDrawerOpen ? 'Close quick reference' : 'Open quick reference'}
-        aria-expanded={isDrawerOpen}
+        aria-label={isDrawerOpen && activeGuideId === 'jspdf' ? 'Close jsPDF reference' : 'Open jsPDF reference'}
+        aria-expanded={isDrawerOpen && activeGuideId === 'jspdf'}
         aria-controls="quick-ref-drawer"
-        onClick={() => setIsDrawerOpen((current) => !current)}
+        onClick={() => handleToggleGuide('jspdf')}
       >
         <span>REF</span>
-        <small>Guide</small>
+        <small>jsPDF</small>
       </button>
+
+      {isDataReferenceEnabled ? (
+        <button
+          type="button"
+          className="quickRefToggle isDataRef"
+          aria-label={isDrawerOpen && activeGuideId === 'data' ? 'Close data reference' : 'Open data reference'}
+          aria-expanded={isDrawerOpen && activeGuideId === 'data'}
+          aria-controls="quick-ref-drawer"
+          onClick={() => handleToggleGuide('data')}
+        >
+          <span>DATA</span>
+          <small>Ref</small>
+        </button>
+      ) : null}
 
       <div
         id="quick-ref-drawer"
@@ -34,8 +93,8 @@ function QuickReference({ isEnabled }) {
       >
         <div className="quickRefHeader">
           <div>
-            <p className="eyebrow">Quick Ref</p>
-            <h3>jsPDF nodes</h3>
+            <p className="eyebrow">{activeGuide.eyebrow}</p>
+            <h3>{activeGuide.title}</h3>
           </div>
           <button
             type="button"
@@ -48,7 +107,7 @@ function QuickReference({ isEnabled }) {
         </div>
 
         <div className="quickRefGroups">
-          {jspdfCatalogSections.map((section) => (
+          {activeGuide.sections.map((section) => (
             <section key={section.id} className="quickRefGroup">
               <div className="quickRefGroupHeader">
                 <h4>{section.title}</h4>
@@ -60,7 +119,12 @@ function QuickReference({ isEnabled }) {
                     key={item.id}
                     type="button"
                     className="quickRefItem"
-                    onClick={() => setSelectedReferenceId(item.id)}
+                    onClick={() =>
+                      setSelectedReferenceTarget({
+                        guideId: activeGuide.id,
+                        itemId: item.id,
+                      })
+                    }
                   >
                     <span>{item.name}</span>
                     <code>{item.signature}</code>
@@ -78,7 +142,7 @@ function QuickReference({ isEnabled }) {
             type="button"
             className="quickRefBackdrop"
             aria-label="Close reference popup"
-            onClick={() => setSelectedReferenceId(null)}
+            onClick={() => setSelectedReferenceTarget(null)}
           />
           <section
             className="quickRefModal"
@@ -97,12 +161,12 @@ function QuickReference({ isEnabled }) {
                 type="button"
                 className="quickRefCloseButton"
                 aria-label="Close reference popup"
-                onClick={() => setSelectedReferenceId(null)}
+                onClick={() => setSelectedReferenceTarget(null)}
               >
                 x
               </button>
             </div>
-            <ReferenceTeachingPanel item={selectedReference} />
+            <SelectedTeachingPanel item={selectedReference} />
           </section>
         </div>
       ) : null}

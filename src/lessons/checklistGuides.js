@@ -61,6 +61,98 @@ const checklistHints = {
     'milestone-rows': 'Milestones card ต้อง render row จาก project.milestones',
     footer: 'เติม footer line ที่ y 270 และ footer text ที่ y 278',
   },
+  'quotation-get-data': {
+    'page-a4-mm': "เริ่มเหมือนเอกสารแรก: const doc = new jsPDF({ unit: 'mm', format: 'a4' })",
+    'thai-font-ready': 'หลังสร้าง doc ให้ registerThaiFont(doc) แล้ว setFont เป็น PDF_FONTS.thai',
+    'raw-rows': "ใช้ const rawRows = getLessonData('quotationRows') เพื่อดึงข้อมูลดิบจาก Data card เข้ามาใน code",
+    'return-doc': 'ท้าย generate() ต้อง return doc เพื่อให้ preview ใช้งานได้',
+  },
+  'quotation-pick-theme': {
+    'previous-stage': 'ฐานจากบท 1 ต้องยังมี doc, rawRows, ฟอนต์ไทย และ return doc',
+    'selected-theme-id': "กำหนด const selectedThemeId = 'blue' เพื่อบอกว่าจะทำเอกสารกลุ่มไหนก่อน",
+  },
+  'quotation-filter-rows': {
+    'previous-stage': 'ฐานจากบท 2 ต้องยังมี rawRows และ selectedThemeId',
+    'filter-selected-rows': 'ใช้ rawRows.filter((row) => row.theme_code === selectedThemeId) เพื่อเหลือเฉพาะ rows ของเอกสารนี้',
+  },
+  'quotation-theme-config': {
+    'previous-stage': 'ฐานจากบท 3 ต้องยังมี selectedRows ที่ filter จาก selectedThemeId',
+    'themes-array': 'เพิ่ม const themes = [...] เพื่อเก็บสี backgroundPath และชื่อแบรนด์ของแต่ละ theme',
+    'find-theme': 'ใช้ themes.find((theme) => theme.id === selectedThemeId) เพื่อหา config สี/background',
+    'find-theme-index': 'ใช้ findIndex() หรือเช็ค !theme เพื่อกันกรณีเลือก theme ที่ไม่มีอยู่',
+  },
+  'quotation-normalize-start': {
+    'previous-stage': 'อย่าลบ filter/find จากบท 4 เพราะ normalize จะย้าย logic เหล่านั้นเข้า function',
+    'normalize-function': 'สร้าง function normalizeQuotationData(rawRows, selectedThemeId) แล้วให้ function นี้ return clean model',
+    'generate-uses-data': 'ใน generate() ให้ const data = normalizeQuotationData(rawRows, selectedThemeId) ก่อนนำไปใช้',
+  },
+  'quotation-document-customer': {
+    'previous-stage': 'ฐานจากบท 5 ต้องยังมี normalizeQuotationData และ generate() เรียก data ที่ normalize แล้ว',
+    'first-row': 'หลัง selectedRows ผ่านแล้ว ให้หยิบ const firstRow = selectedRows[0] เพื่อเป็นข้อมูลระดับเอกสารและลูกค้า',
+    'document-model': 'วาง formatThaiDate และ const document หลัง firstRow จากนั้นเพิ่ม document ใน return object เดิม ไม่ต้องประกาศ firstRow ซ้ำ',
+    'customer-model': 'วาง const customer หลัง document จากนั้นเพิ่ม customer ใน return object เดิม ไม่ต้องเขียน document/customer ทั้งก้อนซ้ำ',
+  },
+  'quotation-map-items': {
+    'previous-stage': 'ฐานจากบท 6 ต้องยัง return document/customer จาก normalizeQuotationData',
+    'items-model': 'วาง const items หลัง firstRow/document/customer โดย selectedRows.map((row) => { ... }) ต้อง return object ของ item หนึ่งตัว แล้วเพิ่ม items ใน return object เดิม',
+  },
+  'quotation-convert-numbers': {
+    'previous-stage': 'ฐานจากบท 7 ต้องยังมี items ที่ map จาก selectedRows',
+    'number-conversion': 'ใน selectedRows.map(...) ให้แปลง row.quantity และ row.unit_price เป็น quantity/unitPrice ก่อน return item',
+    'line-total': 'ใน object ของ item ให้ใช้ quantity/unitPrice ที่แปลงแล้ว และเพิ่ม lineTotal: quantity * unitPrice',
+  },
+  'quotation-reduce-totals': {
+    'previous-stage': 'ฐานจากบท 8 ต้องยังแปลง quantity/unitPrice และมี lineTotal ต่อ item',
+    'subtotal-reduce': 'หลังสร้าง items แล้ว ใช้ items.reduce((sum, item) => sum + item.lineTotal, 0) เพื่อรวมยอดสินค้า',
+    'grand-total': 'สร้าง const totals หลังคำนวณ vat แล้วเพิ่ม totals ใน return object เดิม',
+  },
+  'quotation-render-start': {
+    'previous-stage': 'ฐานจากบท 9 ต้องยังมี data.totals และ clean model ครบ',
+    'render-function': 'เพิ่ม function renderQuotation(data) เพื่อแยกงานวาด PDF ออกจากงานจัดข้อมูล',
+    'generate-render-flow': 'ใน generate() ให้แทนส่วนสร้าง doc เดิมด้วย flow: rawRows -> normalizeQuotationData -> renderQuotation',
+  },
+  'quotation-header-background': {
+    'previous-stage': 'ฐานจากบท 10 ต้องยังมี renderQuotation(data) และ generate() return renderQuotation(data)',
+    'theme-background': 'ใน renderQuotation ใช้ const backgroundImage = getLessonImage(theme.backgroundPath) แล้ว addImage เต็มหน้า',
+    'quotation-header': 'หัวเอกสารใช้ data.title, data.document.quoteNo และ data.document.quoteDate',
+  },
+  'quotation-customer-card': {
+    'previous-stage': 'ฐานจากบท 11 ต้องยังมี renderQuotation(data), background และ header',
+    'customer-card-rect': 'ใช้ doc.rect(pageMargin, 42, contentWidth, 36, "FD") หรือใกล้เคียงเพื่อทำ block ข้อมูลลูกค้า',
+    'customer-name-text': 'วาง data.customer.name ใน doc.text() ไม่ใช้ raw field quo_cus_name ตรงๆ',
+    'customer-contact-text': 'วาง data.customer.contact ใน doc.text()',
+    'valid-until-text': 'วาง data.document.validUntil ใน doc.text() เพื่อบอกวันยืนราคา',
+  },
+  'quotation-table-columns': {
+    'previous-stage': 'ฐานจากบท 12 ต้องยังมี customer card และข้อมูลลูกค้า',
+    'columns-array': 'สร้าง const columns = [{ label, x, width, align }, ...] เป็นแผนที่ตาราง',
+    'table-labels': 'label รายการ, จำนวน, หน่วย, ราคา, รวม ควรอยู่ใน columns array ชุดเดียว ไม่ต้องสร้าง array ซ้ำ',
+    'columns-loop': 'ก่อน loop ให้กำหนด const tableTop เป็นตำแหน่ง y ของหัวตารางก่อน แล้วใช้ columns.forEach(...) วาด label แทนการเขียน doc.text ซ้ำทีละคอลัมน์',
+    'numeric-align': "เพิ่ม align: 'right' ใน column ตัวเลขภายใน columns array เดิม",
+  },
+  'quotation-item-rows': {
+    'previous-stage': 'ฐานจากบท 13 ต้องยังมี columns array และหัวตาราง',
+    'items-loop': 'ใช้ data.items.forEach((item, index) => { ... }) เพื่อวาดแถวสินค้า',
+    'row-position': 'คำนวณ rowY หนึ่งครั้งใน loop จาก currentY + index * rowHeight แล้วใช้ซ้ำใน doc.text ทุกช่อง',
+    'item-fields': 'ใน loop เดิมให้วาง item.name, item.quantity, item.unitPrice และ item.lineTotal',
+    'money-format': 'ค่าราคาใน loop เดิมให้ใช้ toFixed(2) ก่อนส่งเข้า doc.text()',
+  },
+  'quotation-pages-totals': {
+    'previous-stage': 'ฐานจากบท 14 ต้องยัง loop data.items และวาดรายการสินค้าได้',
+    'page-bottom-y': 'กำหนด pageBottomY เป็นเส้นล่างของพื้นที่วาด เช่น 270',
+    'add-page': 'ก่อนวาด row หรือ summary ให้เช็คว่าพื้นที่พอไหม ถ้าไม่พอใช้ doc.addPage()',
+    'repeat-page-context': 'ภายใน block addPage เดิม ให้วาด background/header/table header ซ้ำ ไม่ต้องสร้าง if addPage ซ้อนอีกชุด',
+    'totals-block': 'หลังจบ rows ให้วาด data.totals.subtotal, discount, shipping, vat และ grandTotal ท้ายเอกสาร',
+    'signature-block': 'เพิ่มช่อง ผู้เสนอราคา และ ผู้อนุมัติ เพื่อปิดท้ายใบเสนอราคา',
+  },
+  'checkpoint-quotation-pdf': {
+    'final-normalize-render': 'ควรมีทั้ง normalizeQuotationData(rawRows, selectedThemeId) และ renderQuotation(data) โดย generate() เชื่อมสองส่วนนี้',
+    'final-filter-theme': 'ใน normalize ให้ filter rows ตาม selectedThemeId และหา theme จาก themes array',
+    'final-model-shape': 'model ที่คืนควรมี document, customer, items และ totals ครบ',
+    'final-table': 'ตารางควรมี columns array และ loop data.items เพื่อรองรับจำนวนรายการที่เปลี่ยนได้',
+    'final-pagination': 'ต้องมี logic doc.addPage() เมื่อพื้นที่ของ rows หรือ totals ไม่พอ',
+    'final-totals-signature': 'ท้ายเอกสารควรมี totals และช่องลงชื่อครบ',
+  },
 };
 
 const sharedChecklistHints = {
@@ -236,6 +328,220 @@ doc.setDrawColor(203, 213, 225);
 doc.line(pageMargin, footerY - 8, pageMargin + contentWidth, footerY - 8);
 doc.setFontSize(12);
 doc.text('Generated by jsPDF Visual Lesson Playground', pageMargin, footerY);`,
+    'run-preview': null,
+  },
+  'quotation-get-data': {
+    'page-a4-mm': "const doc = new jsPDF({ unit: 'mm', format: 'a4' });",
+    'thai-font-ready': `registerThaiFont(doc);
+doc.setFont(PDF_FONTS.thai.family, PDF_FONTS.thai.style);`,
+    'raw-rows': "const rawRows = getLessonData('quotationRows');",
+    'return-doc': 'return doc;',
+    'run-preview': null,
+  },
+  'quotation-pick-theme': {
+    'selected-theme-id': "const selectedThemeId = 'blue';",
+    'run-preview': null,
+  },
+  'quotation-filter-rows': {
+    'filter-selected-rows':
+      'const selectedRows = rawRows.filter((row) => row.theme_code === selectedThemeId);',
+    'run-preview': null,
+  },
+  'quotation-theme-config': {
+    'themes-array': `const themes = [
+  { id: 'blue', backgroundPath: '/images/bg-blue-triangles.png' },
+  { id: 'green', backgroundPath: '/images/bg-green-rectangles.png' },
+  { id: 'pink', backgroundPath: '/images/bg-pink-circles.png' },
+];`,
+    'find-theme': 'const theme = themes.find((theme) => theme.id === selectedThemeId);',
+    'find-theme-index': `const themeIndex = themes.findIndex((theme) => theme.id === selectedThemeId);
+if (themeIndex === -1 || !theme) throw new Error('theme not found');`,
+    'run-preview': null,
+  },
+  'quotation-normalize-start': {
+    'normalize-function': `function normalizeQuotationData(rawRows, selectedThemeId) {
+  const selectedRows = rawRows.filter((row) => row.theme_code === selectedThemeId);
+  const theme = themes.find((theme) => theme.id === selectedThemeId);
+  return { title: 'ใบเสนอราคา', theme, selectedRows };
+}`,
+    'generate-uses-data': 'const data = normalizeQuotationData(rawRows, selectedThemeId);',
+    'run-preview': null,
+  },
+  'quotation-document-customer': {
+    'first-row': 'const firstRow = selectedRows[0];',
+    'document-model': `const formatThaiDate = (value) => {
+  const [year, month, day] = String(value || '').split('-');
+
+  if (!year || !month || !day) {
+    return '-';
+  }
+
+  return day + '/' + month + '/' + (Number(year) + 543);
+};
+
+const document = {
+  quoteNo: firstRow.quo_no,
+  quoteDate: formatThaiDate(firstRow.quo_date),
+  validUntil: formatThaiDate(firstRow.quo_valid_until),
+};
+
+// เพิ่ม document, เข้าไปใน return object เดิมของ normalizeQuotationData`,
+    'customer-model': `const customer = {
+  name: firstRow.quo_cus_name,
+  contact: firstRow.quo_cus_contact,
+  address: firstRow.quo_cus_address,
+  tel: firstRow.quo_tel,
+  email: firstRow.quo_email,
+};
+
+// เพิ่ม customer, เข้าไปใน return object เดิมของ normalizeQuotationData`,
+    'run-preview': null,
+  },
+  'quotation-map-items': {
+    'items-model': `const items = selectedRows.map((row) => {
+  return {
+    code: row.product_code,
+    name: row.product_name,
+    size: row.product_size,
+    description: row.product_description,
+    quantity: row.quantity,
+    unit: row.unit,
+    unitPrice: row.unit_price,
+    imagePath: row.imagePath,
+  };
+});
+
+// เพิ่ม items, เข้าไปใน return object เดิมของ normalizeQuotationData`,
+    'run-preview': null,
+  },
+  'quotation-convert-numbers': {
+    'number-conversion': `// วางไว้ใน selectedRows.map((row) => { ... }) ก่อน return item
+const quantity = Number(row.quantity || 0);
+const unitPrice = Number(row.unit_price || 0);`,
+    'line-total': `// ใน object ของ item ให้ใช้ค่าที่แปลงแล้ว
+  quantity,
+  unitPrice,
+  lineTotal: quantity * unitPrice,
+`,
+    'run-preview': null,
+  },
+  'quotation-reduce-totals': {
+    'subtotal-reduce': `const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
+const discount = Number(firstRow.discount || 0);
+const shipping = Number(firstRow.shipping || 0);
+const afterDiscount = subtotal - discount;
+const vat = (afterDiscount + shipping) * (Number(firstRow.vat_rate || 0) / 100);`,
+    'grand-total': `const totals = {
+  subtotal,
+  discount,
+  afterDiscount,
+  shipping,
+  vat,
+  grandTotal: afterDiscount + shipping + vat,
+};
+
+// เพิ่ม totals, เข้าไปใน return object เดิมของ normalizeQuotationData`,
+    'run-preview': null,
+  },
+  'quotation-render-start': {
+    'render-function': `function renderQuotation(data) {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  registerThaiFont(doc);
+  doc.setFont(PDF_FONTS.thai.family, PDF_FONTS.thai.style);
+  doc.setFontSize(18);
+  doc.text(data.title, 20, 24);
+  return doc;
+}`,
+    'generate-render-flow': `// ใน generate() ให้แทนส่วนสร้าง doc เดิมด้วยสองบรรทัดนี้
+const data = normalizeQuotationData(rawRows, selectedThemeId);
+return renderQuotation(data);`,
+    'run-preview': null,
+  },
+  'quotation-header-background': {
+    'theme-background': `const theme = data.theme;
+const backgroundImage = getLessonImage(theme.backgroundPath);
+doc.addImage(backgroundImage, 'PNG', 0, 0, 210, 297);`,
+    'quotation-header': `doc.setTextColor(...theme.text);
+doc.setFontSize(20);
+doc.text(data.title, 16, 24);
+doc.setFontSize(10);
+doc.text('เลขที่: ' + data.document.quoteNo, 194, 18, { align: 'right' });
+doc.text('วันที่: ' + data.document.quoteDate, 194, 25, { align: 'right' });
+doc.setDrawColor(...theme.primary);
+doc.line(16, 32, 194, 32);`,
+    'run-preview': null,
+  },
+  'quotation-customer-card': {
+    'customer-card-rect': `doc.setDrawColor(...theme.border);
+doc.setFillColor(...theme.cardFill);
+doc.rect(pageMargin, 42, contentWidth, 36, 'FD');`,
+    'customer-name-text': `doc.setFontSize(13);
+doc.text('ข้อมูลลูกค้า', pageMargin + 6, 53);
+doc.setFontSize(10);
+doc.text('ชื่อ: ' + data.customer.name, pageMargin + 6, 62);`,
+    'customer-contact-text': "doc.text('ผู้ติดต่อ: ' + data.customer.contact, pageMargin + 6, 69);",
+    'valid-until-text': "doc.text('ยืนราคาถึง: ' + data.document.validUntil, 128, 69);",
+    'run-preview': null,
+  },
+  'quotation-table-columns': {
+    'columns-array': `const columns = [
+  { label: 'รายการ', x: pageMargin + 6, width: 74 },
+  { label: 'จำนวน', x: 104, width: 20 },
+  { label: 'หน่วย', x: 128, width: 18 },
+  { label: 'ราคา', x: 150, width: 20 },
+  { label: 'รวม', x: 180, width: 20 },
+];`,
+    'table-labels': null,
+    'columns-loop': `const tableTop = 90;
+
+doc.setDrawColor(...theme.primary);
+doc.setFillColor(...theme.primary);
+doc.rect(pageMargin, tableTop, contentWidth, 10, 'F');
+doc.setTextColor(255, 255, 255);
+
+columns.forEach((column) => {
+  doc.text(column.label, column.x, tableTop + 7, { align: column.align || 'left' });
+});`,
+    'numeric-align': `// เพิ่มใน column ตัวเลข เช่น จำนวน / ราคา / รวม
+align: 'right'`,
+    'run-preview': null,
+  },
+  'quotation-item-rows': {
+    'items-loop': `data.items.forEach((item, index) => {
+  // วาง rowY และ doc.text ของ item ใน block นี้
+});`,
+    'row-position': `// วางใน data.items.forEach(...) เพียงครั้งเดียว แล้วใช้ rowY ซ้ำทุกช่อง
+const rowY = currentY + index * rowHeight;`,
+    'item-fields': `doc.text(item.name, columns[0].x, rowY + 7);
+doc.text(String(item.quantity), 124, rowY + 7, { align: 'right' });
+doc.text(item.unitPrice.toFixed(2), 170, rowY + 7, { align: 'right' });
+doc.text(item.lineTotal.toFixed(2), 200, rowY + 7, { align: 'right' });`,
+    'money-format': `item.unitPrice.toFixed(2)
+item.lineTotal.toFixed(2)`,
+    'run-preview': null,
+  },
+  'quotation-pages-totals': {
+    'page-bottom-y': 'const pageBottomY = 270;',
+    'add-page': `if (currentY + rowHeight > pageBottomY) {
+  doc.addPage();
+  currentY = 45;
+}`,
+    'repeat-page-context': `const nextBackgroundImage = getLessonImage(theme.backgroundPath);
+doc.addImage(nextBackgroundImage, 'PNG', 0, 0, 210, 297);
+doc.text(data.title + ' (ต่อ)', 16, 25);
+columns.forEach((column) => {
+  doc.text(column.label, column.x, continuedTableStartY + 7, {
+    align: column.align || 'left',
+  });
+});
+currentY = continuedTableStartY + tableHeaderHeight;`,
+    'totals-block': `doc.text(data.totals.subtotal.toFixed(2), 198, totalsY, { align: 'right' });
+doc.text(data.totals.discount.toFixed(2), 198, totalsY + 8, { align: 'right' });
+doc.text(data.totals.shipping.toFixed(2), 198, totalsY + 16, { align: 'right' });
+doc.text(data.totals.vat.toFixed(2), 198, totalsY + 24, { align: 'right' });
+doc.text(data.totals.grandTotal.toFixed(2), 198, totalsY + 32, { align: 'right' });`,
+    'signature-block': `doc.text('ผู้เสนอราคา', 56, signatureY + 22, { align: 'center' });
+doc.text('ผู้อนุมัติ', 146, signatureY + 22, { align: 'center' });`,
     'run-preview': null,
   },
 };

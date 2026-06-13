@@ -10,6 +10,10 @@ import ReferenceWorkspace from './components/ReferenceWorkspace.jsx';
 import { lessons } from './lessons/basicLessons.js';
 import { getChecklistGuide } from './lessons/checklistGuides.js';
 import { evaluateLessonChecklist } from './lessons/evaluateLessonChecklist.js';
+import {
+  createLessonDataGetter,
+  getLessonDataSet,
+} from './lessons/lessonDataSources.js';
 import { createPdfUrl } from './pdf/createPdfUrl.js';
 import { prepareLessonImageAssets } from './pdf/lessonImageAssets.js';
 import { runLessonCode } from './pdf/runLessonCode.js';
@@ -127,13 +131,28 @@ function countCheckedItems(items, checklistResult) {
   return items.filter((item) => checklistResult[item.id]).length;
 }
 
+function getDataSourceRowCount(dataSet) {
+  return Array.isArray(dataSet) ? dataSet.length : null;
+}
+
+function formatLessonDataPreview(dataSet) {
+  if (!dataSet) {
+    return 'Data source not found.';
+  }
+
+  return JSON.stringify(dataSet, null, 2);
+}
+
 function getCheckpointPrerequisites(checkpointLesson) {
   if (checkpointLesson.type !== 'checkpoint') {
     return [];
   }
 
   return lessons.filter(
-    (lesson) => lesson.type === 'lesson' && lesson.order < checkpointLesson.order,
+    (lesson) =>
+      lesson.phase === checkpointLesson.phase &&
+      lesson.type === 'lesson' &&
+      lesson.order < checkpointLesson.order,
   );
 }
 
@@ -180,6 +199,10 @@ function getFriendlyRunErrorMessage(error) {
 
   if (message.includes('Image assets are not available')) {
     return 'บทนี้ยังไม่มี image asset ให้ใช้ หรือเรียก getLessonImage() ในบทที่ไม่ได้เตรียมรูปไว้';
+  }
+
+  if (message.includes('Data source')) {
+    return 'บทนี้ยังไม่มี data source ชื่อนี้ให้ใช้ หรือสะกดชื่อใน getLessonData(...) ไม่ตรง';
   }
 
   return message;
@@ -233,9 +256,10 @@ function getActiveCheckpointHintIds(lesson, checklistItems, checklistResult) {
 }
 
 function getPreviousLesson(lesson) {
-  const lessonIndex = lessons.findIndex((currentLesson) => currentLesson.id === lesson.id);
+  const phaseLessons = lessons.filter((currentLesson) => currentLesson.phase === lesson.phase);
+  const lessonIndex = phaseLessons.findIndex((currentLesson) => currentLesson.id === lesson.id);
 
-  return lessonIndex > 0 ? lessons[lessonIndex - 1] : null;
+  return lessonIndex > 0 ? phaseLessons[lessonIndex - 1] : null;
 }
 
 function getCompletedLessonCode(lesson, lessonWorkById) {
@@ -319,6 +343,12 @@ function isLessonWorkCurrent(lesson, lessonWork) {
   }
 
   return lessonWork.starterCodeVersion === lesson.starterCodeVersion;
+}
+
+function getLessonDocumentNumber(lesson) {
+  const match = lesson.phase.match(/Document\s+(\d+)/i);
+
+  return match ? Number(match[1]) : 1;
 }
 
 function createLessonWorkMap(entries) {
@@ -605,7 +635,10 @@ function App() {
 
     try {
       const getLessonImage = await prepareLessonImageAssets(selectedLesson.imagePaths ?? []);
-      const doc = runLessonCode(code, { getLessonImage });
+      const getLessonData = createLessonDataGetter(
+        (selectedLesson.dataSources ?? []).map((dataSource) => dataSource.id),
+      );
+      const doc = runLessonCode(code, { getLessonImage, getLessonData });
       const nextPdfUrl = createPdfUrl(doc);
 
       if (pdfUrlRef.current) {
@@ -804,8 +837,12 @@ function App() {
     : selectedLesson.practice
       ? 'Practice'
       : 'Mini Task';
+  const selectedLessonDataSources = selectedLesson.dataSources ?? [];
+  const hasLessonDataSources = selectedLessonDataSources.length > 0;
+  const isLessonDataReferenceEnabled = getLessonDocumentNumber(selectedLesson) >= 2;
   const isTargetCardCollapsed = Boolean(collapsedLessonCards.target);
   const isWorkCardCollapsed = Boolean(collapsedLessonCards.work);
+  const isDataCardCollapsed = Boolean(collapsedLessonCards.data);
   const isCodeCardCollapsed = Boolean(collapsedLessonCards.code);
 
   const appShellClassName = [
@@ -883,7 +920,7 @@ function App() {
                 <>
                   <p className="checkpointHintLevel">ตัวอย่าง code ที่ผ่านข้อนี้</p>
                   <p className="checklistGuideCopyHint">
-                    นำ snippet นี้ไปเติมหรือเทียบใน function generate() เฉพาะส่วนของข้อนี้
+                    นำ snippet นี้ไปเติมหรือเทียบในตำแหน่งที่เกี่ยวข้องของบทนี้
                     แล้วกด Run เพื่อตรวจอีกครั้ง
                   </p>
                   <CopyableCodeBlock code={guide.answerCode} />
@@ -1168,6 +1205,55 @@ function App() {
               ) : null}
             </section>
 
+            {hasLessonDataSources ? (
+              <section
+                className={`lessonCard dataCard ${isDataCardCollapsed ? 'isCollapsed' : ''}`}
+                aria-label="Lesson data source"
+              >
+                <div className="lessonCardHeader">
+                  <div>
+                    <p className="eyebrow">Data</p>
+                    <h3>ข้อมูลตั้งต้นของบทนี้</h3>
+                  </div>
+                  <button
+                    type="button"
+                    className="lessonCardToggle"
+                    aria-expanded={!isDataCardCollapsed}
+                    onClick={() => handleToggleLessonCard('data')}
+                  >
+                    <span className="srOnly">
+                      {isDataCardCollapsed ? 'Open data card' : 'Collapse data card'}
+                    </span>
+                  </button>
+                </div>
+
+                {!isDataCardCollapsed ? (
+                  <div className="lessonCardBody">
+                    {selectedLessonDataSources.map((dataSource) => {
+                      const dataSet = getLessonDataSet(dataSource.id);
+                      const rowCount = getDataSourceRowCount(dataSet);
+
+                      return (
+                        <section key={dataSource.id} className="dataSourceBlock">
+                          <div className="dataSourceHeader">
+                            <div>
+                              <p className="eyebrow">{dataSource.id}</p>
+                              <h4>{dataSource.title}</h4>
+                            </div>
+                            {rowCount !== null ? <span>{rowCount} rows</span> : null}
+                          </div>
+                          <p>{dataSource.description}</p>
+                          <pre className="dataSourcePreview">
+                            {formatLessonDataPreview(dataSet)}
+                          </pre>
+                        </section>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
+
             <section
               className={`lessonCard codeCard ${isCodeCardCollapsed ? 'isCollapsed' : ''}`}
               aria-label="Lesson code"
@@ -1301,7 +1387,10 @@ function App() {
           </>
         )}
       </div>
-      <QuickReference isEnabled={viewMode === 'lesson'} />
+      <QuickReference
+        isEnabled={viewMode === 'lesson'}
+        isDataReferenceEnabled={isLessonDataReferenceEnabled}
+      />
     </main>
   );
 }
